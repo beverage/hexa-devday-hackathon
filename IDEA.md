@@ -25,7 +25,8 @@ console (one page): transcript · English draft · the rendered cells · level/r
 - Demo scenario: a **failed-renewal call**. (1) caller hesitates → agent simplifies and slows; (2) caller turns
   formal → agent follows; (3) agent sends a Stripe test-mode payment link, judge pays with 4242; (4) follow-up
   email lands in the same level and register (Levelang's Supabase email automation exists); (5) evaluation scores
-  from the simulated callers. Stripe and email are stretch; (1), (2) and (5) are the pitch.
+  from the simulated callers. Stripe and email are stretch; (1), (2) and (5) are the pitch. Now scenario 1 of three
+  in `DEMO.md` (with a negotiated purchase and a German shop → French call).
 
 ## 2. The detector (the unproven core; spike it Saturday morning)
 

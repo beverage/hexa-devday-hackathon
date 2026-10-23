@@ -38,7 +38,7 @@
 ## Sunday 25 Oct
 
 - [ ] Morning: voice in (the spike's provider) and out (stock voice) on the same page; filler phrase on slow turns
-- [ ] Press-play mode: three pre-recorded callers (hesitant learner, fluent formal, Franglais) play through the agent
+- [ ] Press-play mode: the three `DEMO.md` scenarios, recorded by Alex turn by turn, play through the agent
 - [ ] Evaluation: run the simulated callers, score the detector against the planted markers; numbers for the slide
 - [ ] Optional beats if ahead: Stripe test payment link + QR; follow-up email at the same register; Mirror voice 20 s
 - [ ] 15:00 feature freeze. Two-minute video: person-with-a-problem first, then beats (1), (2), the console, the numbers

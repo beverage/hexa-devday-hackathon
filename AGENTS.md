@@ -8,10 +8,12 @@ file) and by Codex (which reads `AGENTS.md` directly), so keep it the single ori
 1. `BRIEF.md` — the event: clock, rule, prize, hosts, what is still unknown and must be asked at the kickoff.
 2. `IDEA.md` — what we are building, why, and the current state of every thread (agent spine, detector,
    conversational context, voice, Mirror voice beat). Includes the existing assets to reuse.
-3. `CHECKLIST.md` — tonight, Saturday, Sunday, Monday. Tick items as you go.
-4. `DECISIONS.md` — hackathon-local decisions. Product decisions that outlive the weekend go into the Levelang
+3. `DEMO.md` — the three scenarios (support, negotiated purchase, German shop → French): beats, lines, tools,
+   which runs live on Monday and which as press-play on Sunday night.
+4. `CHECKLIST.md` — tonight, Saturday, Sunday, Monday. Tick items as you go.
+5. `DECISIONS.md` — hackathon-local decisions. Product decisions that outlive the weekend go into the Levelang
    repo with `/decide` instead.
-5. `stt-spike/README.md` — the first task: decide the speech-to-text provider before Saturday 11:00.
+6. `stt-spike/README.md` — the speech-to-text spike; decided 10-23 as ElevenLabs Scribe v2, realtime + batch (D-007).
 
 ## The one rule of the event
 
