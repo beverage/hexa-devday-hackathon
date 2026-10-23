@@ -2,9 +2,10 @@
 // STT provider spike: Gradium vs ElevenLabs Scribe v2, on the same learner clips.
 // Decides the input provider for the Hexa / DevDay hack before Saturday 11:00.
 //
-// Node 24, no dependencies. Written 2026-10-23 by Claude (Cowork) from the vendor docs. Gradium legs
-// smoke-tested the same day on synthetic `say` clips; the ElevenLabs leg has not run yet (no key).
+// Node 24, no dependencies. Written 2026-10-23 by Claude (Cowork) from the vendor docs; every leg
+// smoke-tested the same day on synthetic `say` clips.
 //
+//   node spike.mjs synth --clip <n> --voice <id>   Gradium TTS of the reference text → clips/<n>.wav (no recording)
 //   node spike.mjs convert                 clips/*.m4a → clips/wav/*.wav (24 kHz mono 16-bit, afconvert)
 //   node spike.mjs gradium-rest            POST each wav → out/<clip>.gradium-rest.<variant>.json
 //   node spike.mjs gradium-ws              stream pcm over the WebSocket, keep the VAD trace → out/<clip>.gradium-ws.json
@@ -69,8 +70,21 @@ function convert() {
     const src = sourcePath(name), dst = wavPath(name);
     // 24 kHz mono 16-bit: what Gradium's pcm/wav paths expect; ElevenLabs accepts any file.
     execFileSync('afconvert', ['-f', 'WAVE', '-d', 'LEI16@24000', '-c', '1', src, dst], { stdio: 'inherit' });
+    // From an AAC source afconvert writes WAVE_FORMAT_EXTENSIBLE plus a FLLR chunk, and Gradium REST answers that
+    // with an empty 200 (found on the first real recording). Rewrite it with a plain 44-byte PCM header.
+    const { sampleRate, pcm } = wavPcm(readFileSync(dst));
+    writeFileSync(dst, wavFromPcm(pcm, sampleRate));
     console.log(`${name}: ${path.basename(src)} → clips/wav/${name}.wav`);
   }
+}
+
+function wavFromPcm(pcm, rate) {
+  const h = Buffer.alloc(44);
+  h.write('RIFF', 0); h.writeUInt32LE(36 + pcm.length, 4); h.write('WAVE', 8);
+  h.write('fmt ', 12); h.writeUInt32LE(16, 16); h.writeUInt16LE(1, 20); h.writeUInt16LE(1, 22); // PCM, mono
+  h.writeUInt32LE(rate, 24); h.writeUInt32LE(rate * 2, 28); h.writeUInt16LE(2, 32); h.writeUInt16LE(16, 34);
+  h.write('data', 36); h.writeUInt32LE(pcm.length, 40);
+  return Buffer.concat([h, pcm]);
 }
 
 // Minimal WAV reader: returns the PCM payload and its sample rate (afconvert adds extra chunks, so no 44-byte assumption).
@@ -182,6 +196,8 @@ async function gradiumWs() {
 // Would the turn-taking recipe (3 consecutive steps with longest-horizon inactivity_prob > 0.5) have cut the turn
 // during a hesitation, i.e. before the last segment began? Rough, but it is the question that matters for the agent.
 function summarizeVad(steps, segments) {
+  // The recipe only flushes once there is a transcript, so silence before the first word ends is lead-in, not a cut.
+  const firstStop = segments.length ? segments[0].stop_s : Infinity;
   const lastStart = segments.length ? segments[segments.length - 1].start_s : Infinity;
   let run = 0, maxBefore = 0;
   const cuts = [];
@@ -189,7 +205,7 @@ function summarizeVad(steps, segments) {
     const longest = s.vad?.[s.vad.length - 1];
     if (!longest) continue;
     const t = s.total_duration_s ?? (s.step_idx ?? 0) * (s.step_duration_s ?? 0.08);
-    if (t >= lastStart) continue;
+    if (t < firstStop || t >= lastStart) { run = 0; continue; }
     maxBefore = Math.max(maxBefore, longest.inactivity_prob);
     run = longest.inactivity_prob > 0.5 ? run + 1 : 0;
     if (run === 3) cuts.push(Number(t.toFixed(2)));
@@ -229,7 +245,8 @@ async function elevenBatch() {
       let json; try { json = JSON.parse(text); } catch { json = { raw: text }; }
       if (!res.ok) { console.error(`${name}/${v.tag}: HTTP ${res.status} ${text.slice(0, 300)}`); continue; }
       const all = json.words ?? [];
-      const words = all.filter((w) => w.type === 'word');
+      // Scribe types punctuation ("?", "…") as `word` too; keep real words only for rate, pauses and logprob.
+      const words = all.filter((w) => w.type === 'word' && /[\p{L}\p{N}]/u.test(w.text));
       const out = {
         provider: 'eleven-batch', variant: v.tag, clip: name, wall_ms,
         language_code: json.language_code, language_probability: json.language_probability,
@@ -271,6 +288,40 @@ function segmentTiming(segments) {
   return { words_per_s: Number((words / span).toFixed(2)), span_s: Number(span.toFixed(2)), pauses };
 }
 
+// ---- synth: a clip the speaker can't perform, in a Gradium voice ------------
+// Same REST TTS call as the Mirror voice spike (~/Cowork/career/companies/gradium/spike). Writes clips/<name>.wav,
+// which `convert` then treats like a recording (a real clips/<name>.m4a still wins). Synthetic audio is clean and
+// Gradium may read its own TTS more easily, so give the clip a `source` note in reference.json.
+async function synth() {
+  need(GRADIUM_KEY, 'GRADIUM_API_KEY');
+  const voice = flag('--voice');
+  if (!voice) { console.error('synth needs --voice <gradium voice id>'); process.exit(2); }
+  for (const name of clipNames) {
+    const r = ref[name];
+    const text = r.reference.replace(/\s*⏸\s*/g, ' ').trim(); // localized clones take ≤300 chars, REST only
+    const res = await fetch('https://api.gradium.ai/api/post/speech/tts', {
+      method: 'POST', headers: { 'x-api-key': GRADIUM_KEY, 'content-type': 'application/json' },
+      body: JSON.stringify({ text, voice_id: voice, output_format: 'pcm', model_name: 'default', only_audio: false,
+        json_config: JSON.stringify({ temp: 0.5, rewrite_rules: r.language }) }), // a JSON-encoded string on REST
+    });
+    if (!res.ok) { console.error(`${name}: HTTP ${res.status} ${(await res.text()).slice(0, 300)}`); continue; }
+    let rate = 48000;
+    const pcm = [];
+    for (const line of (await res.text()).split('\n')) {
+      const t = line.trim().replace(/^data:\s*/, '');
+      if (!t) continue;
+      const m = JSON.parse(t);
+      if (m.type === 'ready' && m.sample_rate) rate = m.sample_rate;
+      else if (m.type === 'audio') pcm.push(Buffer.from(m.audio, 'base64'));
+      else if (m.type === 'error') throw new Error(`${name}: TTS error ${JSON.stringify(m)}`);
+    }
+    const silence = (s) => Buffer.alloc(Math.round(rate * s) * 2);
+    const audio = Buffer.concat([silence(1), ...pcm, silence(1)]); // lead-in: Gradium STT drops a word at 0.0 s
+    writeFileSync(path.join(CLIPS, `${name}.wav`), wavFromPcm(audio, rate));
+    console.log(`${name}: ${voice} → clips/${name}.wav (${(audio.length / 2 / rate).toFixed(1)} s at ${rate} Hz)`);
+  }
+}
+
 // ---- report -----------------------------------------------------------------
 const norm = (s) => s.toLowerCase().normalize('NFC').replace(/[’`]/g, "'").replace(/[.,!?;:()\[\]"«»…⏸]/g, ' ').replace(/\s+/g, ' ').trim();
 const hit = (transcript, phrase) => new RegExp(`(^|[^\\p{L}\\p{N}])${norm(phrase).replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^\\p{L}\\p{N}])`, 'u').test(transcript);
@@ -281,6 +332,10 @@ function report() {
   for (const name of clipNames) {
     const r = ref[name];
     console.log(`\n=== ${name} (${r.language}) — ${r.persona}\n    said: ${r.reference}`);
+    if (r.source) console.log(`    source: ${r.source}`);
+    // Markers the take on disk doesn't actually contain (a slip while recording): left out of every score.
+    const unscored = new Set((r.unscored ?? []).map(norm));
+    if (unscored.size) console.log(`    unscored: ${r.unscored.join(', ')} (${r.unscored_why ?? 'not in this take'})`);
     const results = files.filter((f) => f.startsWith(`${name}.`)).sort().map((f) => JSON.parse(readFileSync(path.join(OUT, f), 'utf8')));
     for (const o of results) {
       const label = `${o.provider}${o.variant ? '/' + o.variant : ''}`;
@@ -288,10 +343,11 @@ function report() {
       let kept = 0, total = 0;
       const lines = [];
       for (const [group, items] of Object.entries(r.planted ?? {})) {
-        const marks = items.map((p) => { const ok = hit(t, p); total++; kept += ok ? 1 : 0; return `${ok ? '✓' : '✗'} ${p}`; });
-        lines.push(`  ${group}: ${marks.join('   ')}`);
+        const marks = items.filter((p) => !unscored.has(norm(p)))
+          .map((p) => { const ok = hit(t, p); total++; kept += ok ? 1 : 0; return `${ok ? '✓' : '✗'} ${p}`; });
+        if (marks.length) lines.push(`  ${group}: ${marks.join('   ')}`);
       }
-      for (const c of r.corrected ?? []) lines.push(`  ${hit(t, c) ? `✗ auto-corrected to "${c}"` : `✓ "${c}" absent (not normalised)`}`);
+      for (const c of (r.corrected ?? []).filter((c) => !unscored.has(norm(c)))) lines.push(`  ${hit(t, c) ? `✗ auto-corrected to "${c}"` : `✓ "${c}" absent (not normalised)`}`);
       totals[label] = totals[label] ?? { kept: 0, total: 0, clips: 0 };
       totals[label].kept += kept; totals[label].total += total; totals[label].clips += 1;
       const timingBits = [o.wall_ms ? `${o.wall_ms} ms` : null, o.tail_ms != null ? `final text ${o.tail_ms} ms after last audio` : null].filter(Boolean).join(', ');
@@ -306,7 +362,9 @@ function report() {
       }
       if (o.audio_events?.length) console.log(`  audio events: ${o.audio_events.join(', ')}`);
       if (o.low_logprob?.length) console.log(`  lowest logprob: ${o.low_logprob.map((w) => `${w.text} ${w.logprob}`).join(', ')}`);
-      if (o.vad) console.log(`  semantic VAD: ${o.vad.steps} steps, horizons ${JSON.stringify(o.vad.horizons_s)}; max inactivity before the last segment ${o.vad.max_inactivity_before_last_segment}; recipe would have cut the turn at ${o.vad.would_have_cut_turn_at_s.length ? o.vad.would_have_cut_turn_at_s.join(' s, ') + ' s' : 'no point'}${r.pause_after ? ` (planted pause after "${r.pause_after}")` : ''}`);
+      // Recomputed from the saved steps so a fix to summarizeVad applies to runs already on disk.
+      const vad = o.steps?.length ? summarizeVad(o.steps, o.segments ?? []) : o.vad;
+      if (vad) console.log(`  semantic VAD: ${vad.steps} steps, horizons ${JSON.stringify(vad.horizons_s)}; max inactivity between the first word and the last segment ${vad.max_inactivity_before_last_segment}; recipe would have cut the turn at ${vad.would_have_cut_turn_at_s.length ? vad.would_have_cut_turn_at_s.join(' s, ') + ' s' : 'no point'}${r.pause_after ? ` (planted pause after "${r.pause_after}")` : ''}`);
       if (o.segments?.length) console.log(`  segments: ${o.segments.map((s) => `[${s.start_s}–${s.stop_s ?? '?'}] ${s.text}`).join(' | ')}`);
     }
   }
@@ -317,7 +375,7 @@ function report() {
 }
 
 // ---- main -------------------------------------------------------------------
-const run = { convert, 'gradium-rest': gradiumRest, 'gradium-ws': gradiumWs, 'eleven-batch': elevenBatch, report,
+const run = { convert, synth, 'gradium-rest': gradiumRest, 'gradium-ws': gradiumWs, 'eleven-batch': elevenBatch, report,
   all: async () => { await gradiumRest(); await gradiumWs(); await elevenBatch(); } };
-if (!run[cmd]) { console.error('usage: node spike.mjs convert | gradium-rest | gradium-ws | eleven-batch | all | report [--clip name] [--env file]'); process.exit(2); }
+if (!run[cmd]) { console.error('usage: node spike.mjs synth --voice <id> | convert | gradium-rest | gradium-ws | eleven-batch | all | report [--clip name] [--env file]'); process.exit(2); }
 await run[cmd]();

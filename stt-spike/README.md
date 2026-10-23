@@ -55,10 +55,16 @@ Don't act the beginner by slowing down artificially; speak at your pace, the pla
 **Leave about a second of silence after pressing record, before the first word**: in the smoke test, Gradium
 dropped a first word that started at 0.0 s (both REST and WS) and kept it with 0.7 s of lead-in.
 
+A clip you can't perform convincingly can be rendered instead (done for `fr-fluent-formal` on 10-23, in Alex's
+localized clone): `node spike.mjs synth --clip fr-fluent-formal --voice vox_emb_hIesT0mkjkIS3A7u` writes
+`clips/fr-fluent-formal.wav` with a second of silence at each end (gitignored: it is Alex's voice). Clean TTS audio,
+and Gradium may read its own TTS more easily, so it is a control that fluent features survive, not a test of real
+fluent speech; its `source` field in `reference.json` says so, and the report prints it. A recorded `.m4a` wins.
+
 ## 2. Run (20 min)
 
 ```bash
-node spike.mjs convert                    # m4a → clips/wav/*.wav (24 kHz mono 16-bit)
+node spike.mjs convert                    # m4a (or a synth wav) → clips/wav/*.wav (24 kHz mono 16-bit, plain PCM header)
 node spike.mjs gradium-rest               # plain + keywords variants per clip
 node spike.mjs gradium-ws                 # real-time paced; keeps the VAD trace (add --fast to skip pacing)
 node spike.mjs eleven-batch               # verbatim default, word timestamps, auto language
@@ -70,11 +76,15 @@ boosting, +20%), `--clean` (ElevenLabs `no_verbatim`, as a contrast to see what 
 (force `language_code` instead of auto-detect). `--clip fr-beginner` runs one clip.
 
 **Smoke-tested 2026-10-23 (Code session)** on synthetic clips made with macOS `say` (Jacques, Anna) from the
-reference texts: `convert`, `gradium-rest`, `gradium-ws` (paced and `--fast`) and `report` run end to end with no
-fixes; the `x-api-key` header on Node's WebSocket is accepted. The ElevenLabs leg has **not run** (no key yet);
-its form fields and response fields (`language_code`, `language_probability`, `words[].text/start/end/type/logprob`)
-match the API reference. Synthetic speech says nothing about learner evidence (`say` reads "euh" as "peu"), so
-none of those transcripts count; only the recordings do.
+reference texts: every leg and variant (`gradium-rest`, `gradium-ws` paced and `--fast`, `eleven-batch` with
+`--clean` and `--keyterms`) and `report` run end to end. Scribe returns punctuation as `word` tokens, now filtered
+out of rate, pauses and logprob. Synthetic speech says nothing about learner evidence (`say` speaks English with a
+French accent, and Gradium REST hears its "euh" as "peu"), so none of those transcripts count; only the recordings do.
+
+Two fixes from the first real recording (`fr-beginner`, 10-23): from an AAC source `afconvert` writes
+`WAVE_FORMAT_EXTENSIBLE`, which Gradium REST answers with an empty 200, so `convert` now rewrites a plain PCM header;
+and the semantic-VAD summary counted lead-in silence as a cut, so it now starts after the first word (the recipe only
+flushes once there is a transcript) and `report` recomputes it from the saved steps.
 
 Not scripted, by choice: the **ElevenLabs realtime leg**. The batch call answers the detector questions (verbatim,
 errors, language, logprob) and the docs settle what realtime adds or removes (timestamps only on committed

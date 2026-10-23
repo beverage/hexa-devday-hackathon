@@ -13,12 +13,15 @@
       "interaction": ["comment on dit"]
     },
     "corrected": ["le problème"],
-    "pause_after": "paiement"
+    "pause_after": "paiement",
+    "unscored": ["la problème", "le problème"],
+    "unscored_why": "the 10-23 take says \"le problème\" by accident, so the gender error was never planted; re-record to test it (de-learner still plants gender and case errors)"
   },
 
   "fr-fluent-formal": {
     "language": "fr",
     "persona": "fluent, formal, vous, conditionnel passé, subordinate clauses, natural pace",
+    "source": "synthetic, not recorded: `synth --voice vox_emb_hIesT0mkjkIS3A7u` (Gradium TTS, Alex's localized clone, General French), 2026-10-23. Clean studio-like audio, and Gradium STT may read its own TTS more easily: a control for 'fluent features survive', not a test of real fluent speech.",
     "reference": "Bonjour, je vous appelle parce que mon renouvellement n'est pas passé ce matin. J'aurais souhaité savoir si vous pourriez vérifier le prélèvement, et si cela n'avait pas fonctionné, il faudrait que je vous communique une nouvelle carte.",
     "planted": {
       "features": ["j'aurais souhaité", "pourriez", "il faudrait que je vous communique", "prélèvement", "n'avait pas fonctionné"]

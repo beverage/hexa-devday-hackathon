@@ -4,8 +4,10 @@
 
 ## Tonight (Fri 23 Oct)
 
-- [ ] ElevenLabs: redeem the Accel codes; API key into the repo-root `.env` as `ELEVENLABS_API_KEY`
-- [ ] OpenAI: redeem the Accel $50; `OPENAI_API_KEY` in the same file; one chat completion from this folder works
+- [x] ElevenLabs: redeem the Accel codes; API key into the repo-root `.env` as `ELEVENLABS_API_KEY` (Scribe v2
+      batch answered on all five smoke clips, 10-23)
+- [x] OpenAI: redeem the Accel $50; `OPENAI_API_KEY` in the same file; one chat completion from this folder works
+      (`gpt-5.4-nano`, 10-23; the key also sees `gpt-transcribe`, `gpt-live-transcribe`, `gpt-4o-transcribe`, `whisper-1`)
 - [ ] **STT spike** (`stt-spike/README.md`): record 5 clips → `convert` → `all` → `report` → decision line at the
       top of its README. Done when D-003 in `DECISIONS.md` is no longer "pending"
 - [ ] Codex CLI installed and signed in; Codex MCP config pointing at the Levelang MCP server, verified by one
