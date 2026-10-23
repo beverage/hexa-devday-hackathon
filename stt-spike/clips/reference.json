@@ -1,0 +1,64 @@
+{
+  "_readme": "One entry per clip. Record clips/<name>.m4a reading `reference` exactly as written, including the euh/ähm, the false starts and the errors. ⏸ = pause about two seconds, then keep going. `planted` lists what the transcript must KEEP for the detector to have evidence; `corrected` lists the normalised forms a cleaning transcriber would substitute (a hit there means the error was auto-corrected, i.e. evidence lost). Matching is whole-word, case- and punctuation-insensitive.",
+
+  "fr-beginner": {
+    "language": "fr",
+    "persona": "hesitant beginner: fillers, a false start, a gender error, a register slip, an English gap-fill, one long mid-sentence pause",
+    "reference": "Bonjour, euh… je veux… je voudrais annuler… non, euh, comment on dit… cancel mon abonnement. Il y a la problème avec le paiement ⏸ euh, vous pouvez… tu peux m'aider ? Merci.",
+    "planted": {
+      "fillers": ["euh"],
+      "false_starts": ["je veux", "vous pouvez"],
+      "errors": ["la problème", "tu peux"],
+      "english": ["cancel"],
+      "interaction": ["comment on dit"]
+    },
+    "corrected": ["le problème"],
+    "pause_after": "paiement"
+  },
+
+  "fr-fluent-formal": {
+    "language": "fr",
+    "persona": "fluent, formal, vous, conditionnel passé, subordinate clauses, natural pace",
+    "reference": "Bonjour, je vous appelle parce que mon renouvellement n'est pas passé ce matin. J'aurais souhaité savoir si vous pourriez vérifier le prélèvement, et si cela n'avait pas fonctionné, il faudrait que je vous communique une nouvelle carte.",
+    "planted": {
+      "features": ["j'aurais souhaité", "pourriez", "il faudrait que je vous communique", "prélèvement", "n'avait pas fonctionné"]
+    },
+    "corrected": []
+  },
+
+  "fr-franglais": {
+    "language": "fr",
+    "persona": "fluent Franglais: English jargon mid-sentence, fast",
+    "reference": "En fait on doit merger la PR avant la deadline de vendredi, sinon le renouvellement du subscription reste bloqué, et le customer success va encore nous ping.",
+    "planted": {
+      "english": ["merger", "PR", "deadline", "subscription", "customer success", "ping"],
+      "features": ["renouvellement", "bloqué"]
+    },
+    "corrected": ["fusionner", "échéance", "abonnement"]
+  },
+
+  "de-learner": {
+    "language": "de",
+    "persona": "German learner: fillers, a false start, case and gender errors, an English gap-fill",
+    "reference": "Hallo, ähm, ich habe ein Problem mit der… mit das Zahlung. Ähm, ich möchte, ähm, cancel mein Abonnement, weil ich… ich bin nicht… ich habe nicht genug Geld dieses Monat. ⏸ Können Sie mir helfen, bitte?",
+    "planted": {
+      "fillers": ["ähm"],
+      "false_starts": ["mit der", "ich bin nicht"],
+      "errors": ["das Zahlung", "dieses Monat"],
+      "english": ["cancel"]
+    },
+    "corrected": ["die Zahlung", "diesen Monat"],
+    "pause_after": "Monat"
+  },
+
+  "fr-short": {
+    "language": "fr",
+    "persona": "short comprehension-failure turns separated by long pauses (what the detector sees when the agent is pitched too high)",
+    "reference": "Oui. ⏸ D'accord. ⏸ Pardon, je ne comprends pas. ⏸ Plus lentement, s'il vous plaît.",
+    "planted": {
+      "interaction": ["je ne comprends pas", "plus lentement"]
+    },
+    "corrected": [],
+    "pause_after": "accord"
+  }
+}

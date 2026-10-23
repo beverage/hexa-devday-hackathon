@@ -1,0 +1,8 @@
+.env
+.env.local
+*.env
+node_modules/
+stt-spike/clips/*.m4a
+stt-spike/clips/wav/
+stt-spike/out/
+.DS_Store
