@@ -10,7 +10,8 @@
 //   node spike.mjs gradium-rest            POST each wav → out/<clip>.gradium-rest.<variant>.json
 //   node spike.mjs gradium-ws              stream pcm over the WebSocket, keep the VAD trace → out/<clip>.gradium-ws.json
 //   node spike.mjs eleven-batch            POST each wav to Scribe v2 (word timestamps, verbatim) → out/<clip>.eleven-batch.<variant>.json
-//   node spike.mjs all                     the three legs above
+//   node spike.mjs eleven-rt               stream each wav to Scribe v2 Realtime, paced, VAD commits (--silence s) → out/<clip>.eleven-rt.<variant>.json
+//   node spike.mjs all                     the three legs above (not eleven-rt)
 //   node spike.mjs report                  the comparison, one block per clip
 //
 // Flags: --env <file> (default: ../.env, then ~/Code/Apps/hackathon/.env; needs GRADIUM_API_KEY, ELEVENLABS_API_KEY)
@@ -245,20 +246,99 @@ async function elevenBatch() {
       let json; try { json = JSON.parse(text); } catch { json = { raw: text }; }
       if (!res.ok) { console.error(`${name}/${v.tag}: HTTP ${res.status} ${text.slice(0, 300)}`); continue; }
       const all = json.words ?? [];
-      // Scribe types punctuation ("?", "…") as `word` too; keep real words only for rate, pauses and logprob.
-      const words = all.filter((w) => w.type === 'word' && /[\p{L}\p{N}]/u.test(w.text));
+      const words = realWords(all);
       const out = {
         provider: 'eleven-batch', variant: v.tag, clip: name, wall_ms,
         language_code: json.language_code, language_probability: json.language_probability,
         transcript: json.text, words: all, timing: timing(words),
         audio_events: all.filter((w) => w.type === 'audio_event').map((w) => w.text),
-        low_logprob: words.filter((w) => typeof w.logprob === 'number').sort((a, b) => a.logprob - b.logprob).slice(0, 5)
-          .map((w) => ({ text: w.text, logprob: Number(w.logprob.toFixed(3)) })),
+        low_logprob: lowLogprob(words),
       };
       save(`${name}.eleven-batch.${v.tag}.json`, out);
       console.log(`${name}/${v.tag} (${wall_ms} ms, ${out.language_code} p=${out.language_probability}): ${out.transcript}`);
       console.log(`  ${out.timing.words_per_s} w/s; pauses ${JSON.stringify(out.timing.pauses)}; events ${JSON.stringify(out.audio_events)}`);
     }
+  }
+}
+
+// Scribe types punctuation ("?", "…") as `word` too; keep real words only for rate, pauses and logprob.
+const realWords = (all) => all.filter((w) => w.type === 'word' && /[\p{L}\p{N}]/u.test(w.text));
+const lowLogprob = (words) => words.filter((w) => typeof w.logprob === 'number').sort((a, b) => a.logprob - b.logprob).slice(0, 5)
+  .map((w) => ({ text: w.text, logprob: Number(w.logprob.toFixed(3)) }));
+
+// ---- leg D: ElevenLabs Scribe v2 Realtime ----------------------------------
+// wss://api.elevenlabs.io/v1/speech-to-text/realtime with the xi-api-key header; pcm_24000 in 80 ms chunks paced at
+// real time; VAD commits after --silence seconds (vad_silence_threshold_secs, default 1.5). Each commit is where the
+// agent would take the turn, so a commit inside fr-beginner's hesitations means the caller got cut off.
+async function elevenRt() {
+  need(ELEVEN_KEY, 'ELEVENLABS_API_KEY');
+  const silence = Number(flag('--silence') ?? 1.5);
+  for (const name of clipNames) {
+    const r = ref[name];
+    const { sampleRate, pcm } = wavPcm(readFileSync(wavPath(name)));
+    if (sampleRate !== 24000 || !pcm) throw new Error(`${name}: need a 24 kHz wav (run convert), got ${sampleRate}`);
+    const q = new URLSearchParams({ model_id: 'scribe_v2_realtime', audio_format: 'pcm_24000', commit_strategy: 'vad',
+      vad_silence_threshold_secs: String(silence), include_timestamps: 'true', include_language_detection: 'true' });
+    if (has('--lang')) q.set('language_code', r.language);
+
+    const result = await new Promise((resolve, reject) => {
+      const ws = new WebSocket(`wss://api.elevenlabs.io/v1/speech-to-text/realtime?${q}`, { headers: { 'xi-api-key': ELEVEN_KEY } });
+      const msgs = [], commits = [], lateErrors = [];
+      let config = null, sentS = 0, tLastAudio = null, tFinal = null, idle = null;
+      const t0 = performance.now();
+      const finish = () => { clearTimeout(idle); ws.close(); };
+      ws.addEventListener('message', async (ev) => {
+        const text = typeof ev.data === 'string' ? ev.data : Buffer.from(await ev.data.arrayBuffer()).toString();
+        const m = JSON.parse(text);
+        if (m.message_type === 'session_started') { config = m.config; streamAudio().catch(reject); return; }
+        if (m.message_type === 'partial_transcript') return;
+        msgs.push({ ...m, t_ms: Math.round(performance.now() - t0), audio_s: Number(sentS.toFixed(2)) });
+        if (m.error) {
+          // After the last audio, a throttled or empty final commit is noise, not a failure.
+          if (tLastAudio) { lateErrors.push(`${m.message_type}: ${m.error}`); idle = idle ?? setTimeout(finish, 1500); return; }
+          reject(new Error(`${m.message_type}: ${m.error}`)); ws.close(); return;
+        }
+        if (m.message_type === 'committed_transcript_with_timestamps') {
+          commits.push({ audio_s: Number(sentS.toFixed(2)), text: m.text, words: m.words ?? [], language_code: m.language_code });
+          if (tLastAudio) { tFinal = performance.now(); clearTimeout(idle); idle = setTimeout(finish, 1500); }
+        }
+      });
+      let wsError = null;
+      ws.addEventListener('error', (e) => { wsError = e.message || e.type; });
+      ws.addEventListener('close', (ev) => {
+        clearTimeout(idle);
+        // An unclean close after the last audio still leaves every commit in hand; one mid-stream is a failure.
+        if (!tLastAudio) return reject(new Error(`socket closed at ${sentS.toFixed(2)} s of audio (code ${ev.code} ${ev.reason || ''} ${wsError ?? ''}); last messages ${JSON.stringify(msgs.slice(-2)).slice(0, 400)}`));
+        if (wsError || ![1000, 1005].includes(ev.code)) lateErrors.push(`close ${ev.code} ${ev.reason || wsError || ''}`.trim());
+        resolve({ config, msgs, commits, lateErrors, tail_ms: tFinal && tLastAudio ? Math.round(tFinal - tLastAudio) : null });
+      });
+      async function streamAudio() {
+        const chunk = 3840; // 80 ms at 24 kHz, 16-bit mono
+        for (let off = 0; off < pcm.length; off += chunk) {
+          const last = off + chunk >= pcm.length; // commit whatever is pending with the last chunk
+          ws.send(JSON.stringify({ message_type: 'input_audio_chunk', audio_base_64: pcm.subarray(off, off + chunk).toString('base64'), commit: last, sample_rate: 24000 }));
+          sentS = Math.min(off + chunk, pcm.length) / 2 / 24000;
+          await sleep(80);
+        }
+        tLastAudio = performance.now();
+        idle = setTimeout(finish, 8000); // hard stop if the final commit never answers
+      }
+    });
+
+    const all = result.commits.flatMap((c) => c.words);
+    const words = realWords(all);
+    const out = {
+      provider: 'eleven-rt', variant: `vad${silence}${has('--lang') ? '-lang' : ''}`, clip: name, config: result.config,
+      // Detected per commit, so a one-word turn ("Oui.") can come back as another language: keep them all.
+      language_code: [...new Set(result.commits.filter((c) => c.text.trim()).map((c) => c.language_code))].join('/') || null,
+      transcript: result.commits.map((c) => c.text).join(' ').replace(/\s+/g, ' ').trim(),
+      commits: result.commits.filter((c) => c.text.trim()).map(({ audio_s, text, language_code }) => ({ audio_s, text, language_code })),
+      late_errors: result.lateErrors,
+      tail_ms: result.tail_ms, words: all, timing: timing(words), low_logprob: lowLogprob(words), messages: result.msgs,
+    };
+    save(`${name}.eleven-rt.${out.variant}.json`, out);
+    console.log(`${name}/${out.variant} (final commit ${out.tail_ms} ms after last audio, ${out.language_code}): ${out.transcript}`);
+    console.log(`  commits at ${out.commits.map((c) => `${c.audio_s}s`).join(', ')}${out.late_errors.length ? `; after the audio: ${out.late_errors.join('; ')}` : ''}`);
   }
 }
 
@@ -365,7 +445,8 @@ function report() {
       console.log(`\n  [${label}] ${total ? `${kept}/${total} planted markers kept` : ''}${timingBits ? ` · ${timingBits}` : ''}`);
       console.log(`  → ${o.transcript}`);
       for (const l of lines) console.log(l);
-      if (o.language_code) console.log(`  language: ${o.language_code} (p=${o.language_probability})`);
+      if (o.language_code) console.log(`  language: ${o.language_code}${o.language_probability != null ? ` (p=${o.language_probability})` : ''}`);
+      if (o.commits?.length) console.log(`  VAD commits (where the agent takes the turn): ${o.commits.map((c) => `${c.audio_s}s ${c.language_code ?? ''} "${c.text}"`).join(' | ')}`);
       if (o.timing?.words_per_s) console.log(`  timing: ${o.timing.words_per_s} words/s over ${o.timing.span_s} s; pauses ≥0.5 s: ${o.timing.pauses.map((p) => `${p.gap_s}s after "${p.after}"`).join(', ') || 'none'}${r.pause_after ? ` (planted after "${r.pause_after}")` : ''}`);
       if (o.provider?.startsWith('gradium') && o.segments?.length) {
         const g = segmentTiming(o.segments);
@@ -386,7 +467,7 @@ function report() {
 }
 
 // ---- main -------------------------------------------------------------------
-const run = { convert, synth, 'gradium-rest': gradiumRest, 'gradium-ws': gradiumWs, 'eleven-batch': elevenBatch, report,
+const run = { convert, synth, 'gradium-rest': gradiumRest, 'gradium-ws': gradiumWs, 'eleven-batch': elevenBatch, 'eleven-rt': elevenRt, report,
   all: async () => { await gradiumRest(); await gradiumWs(); await elevenBatch(); } };
 if (!run[cmd]) { console.error('usage: node spike.mjs synth --voice <id> | convert | gradium-rest | gradium-ws | eleven-batch | all | report [--clip name] [--env file]'); process.exit(2); }
 await run[cmd]();

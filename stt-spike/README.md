@@ -4,9 +4,16 @@
 French clips against 17/21 for Gradium's best legs. On the one real take (`fr-beginner`) it kept 6/6 against 3–4/6:
 Gradium dropped every "euh" and turned the English gap-fill into French-looking words ("Cancelmon Paramount");
 on Franglais it lost "PR" both ways ("l'APR", "la pillard") even on its own TTS. Not measured: three of the four
-clips are synthetic (Alex's Gradium clone, a home-field edge for Gradium), `de-learner` is not recorded, and the
-ElevenLabs **realtime** leg is untested (batch only). Gradium's semantic VAD is the one thing given up: it held the
-turn through every real hesitation, where Scribe realtime commits on a fixed silence threshold.
+clips are synthetic (Alex's Gradium clone, a home-field edge for Gradium) and `de-learner` is not recorded.
+
+**Realtime is weaker than batch (18/21, two runs, same misses):** on the real take it drops "veux" from the false
+start and rewrites the register slip "tu peux" as "vous pouvez", and on Franglais it writes "PIAR". Fillers, English
+jargon and fluent features survive, and its lowest logprobs land on exactly the rewritten words ("vous" −2.2,
+"pouvez" −1.7, "PIAR" −0.82). With a 1.5 s silence threshold it never cut the hesitant caller (one commit, at the
+end) and committed 7 of 8 real turn ends on time across two runs; final commit 0.1–0.4 s after the audio (once
+1.3 s). Per-commit language detection is noise on one-word turns ("Oui." → it, "D'accord." → en): pin
+`language_code`. **So: realtime drives the live turn (agent reply, turn-taking); batch re-reads each committed turn's
+audio for the detector** (~1–1.6 s, off the reply path, since the judge runs in the background anyway).
 
 Written Fri 2026-10-23 17:30 by Claude (Cowork) for the Code session. Decides one thing: **which speech-to-text
 feeds the level/register detector in the Hexa / DevDay hack**, so the build starts at 11:00 Saturday with no
@@ -76,6 +83,7 @@ node spike.mjs convert                    # m4a (or a synth wav) → clips/wav/*
 node spike.mjs gradium-rest               # plain + keywords variants per clip
 node spike.mjs gradium-ws                 # real-time paced; keeps the VAD trace (add --fast to skip pacing)
 node spike.mjs eleven-batch               # verbatim default, word timestamps, auto language
+node spike.mjs eleven-rt                  # Scribe v2 Realtime, paced, VAD commits (--silence 1.5, --lang to pin)
 node spike.mjs report
 ```
 
@@ -94,12 +102,12 @@ Two fixes from the first real recording (`fr-beginner`, 10-23): from an AAC sour
 and the semantic-VAD summary counted lead-in silence as a cut, so it now starts after the first word (the recipe only
 flushes once there is a transcript) and `report` recomputes it from the saved steps.
 
-Not scripted, by choice: the **ElevenLabs realtime leg**. The batch call answers the detector questions (verbatim,
-errors, language, logprob) and the docs settle what realtime adds or removes (timestamps only on committed
-segments; `logprob` and audio events undocumented in realtime; `include_timestamps` cannot be combined with
-`filter_background_audio`). If there are 20 spare minutes, `@elevenlabs/client` → `Scribe.connect({ token,
-modelId: "scribe_v2_realtime", commitStrategy: "vad", includeTimestamps: true, audioFormat: PCM_16000 })` with
-`connection.send({ audioBase64 })` chunks confirms the realtime word timestamps arrive.
+The **ElevenLabs realtime leg** (`eleven-rt`, added 10-23) needs no SDK: a raw WebSocket to
+`wss://api.elevenlabs.io/v1/speech-to-text/realtime` with the `xi-api-key` header, `audio_format=pcm_24000`,
+`commit_strategy=vad`, `include_timestamps` and `include_language_detection`; `input_audio_chunk` messages of 80 ms,
+the last one with `commit: true`. Each committed segment brings word timestamps (continuous across commits) and
+`logprob`, both undocumented-to-unknown before. The server closes with 1005/1006 after the final commit; harmless.
+In the browser, use a single-use token (`?token=`) instead of the key.
 
 ## 3. Read the report (20 min)
 
