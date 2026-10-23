@@ -32,7 +32,9 @@
   "fr-franglais": {
     "language": "fr",
     "persona": "fluent Franglais: English jargon mid-sentence, fast",
+    "source": "synthetic, not recorded: `synth --voice vox_emb_hIesT0mkjkIS3A7u` (Gradium TTS, Alex's localized clone, General French), 2026-10-23, with \"PR\" spelled \"pi-ar\" in `tts_text` for the English pronunciation. Gradium STT gets a home-field edge on its own TTS. A first take from the plain text (French letter names) scored the same: ElevenLabs 8/8, Gradium 7/8 (\"l'APR\" there, \"la pillard\" here).",
     "reference": "En fait on doit merger la PR avant la deadline de vendredi, sinon le renouvellement du subscription reste bloqué, et le customer success va encore nous ping.",
+    "tts_text": "En fait on doit merger la pi-ar avant la deadline de vendredi, sinon le renouvellement du subscription reste bloqué, et le customer success va encore nous ping.",
     "planted": {
       "english": ["merger", "PR", "deadline", "subscription", "customer success", "ping"],
       "features": ["renouvellement", "bloqué"]
@@ -57,6 +59,7 @@
   "fr-short": {
     "language": "fr",
     "persona": "short comprehension-failure turns separated by long pauses (what the detector sees when the agent is pitched too high)",
+    "source": "synthetic, not recorded: `synth --voice vox_emb_hIesT0mkjkIS3A7u` (Gradium TTS, Alex's localized clone, General French), 2026-10-23; each ⏸ is 2 s of spliced silence (gaps read 3.2–3.7 s with the TTS's own edges). Clean audio: tests turn ends and timing, not recognition under strain.",
     "reference": "Oui. ⏸ D'accord. ⏸ Pardon, je ne comprends pas. ⏸ Plus lentement, s'il vous plaît.",
     "planted": {
       "interaction": ["je ne comprends pas", "plus lentement"]

@@ -292,34 +292,45 @@ function segmentTiming(segments) {
 // Same REST TTS call as the Mirror voice spike (~/Cowork/career/companies/gradium/spike). Writes clips/<name>.wav,
 // which `convert` then treats like a recording (a real clips/<name>.m4a still wins). Synthetic audio is clean and
 // Gradium may read its own TTS more easily, so give the clip a `source` note in reference.json.
+// Each ⏸ becomes 2 s of real silence: the pieces between pauses are rendered separately and spliced.
 async function synth() {
   need(GRADIUM_KEY, 'GRADIUM_API_KEY');
   const voice = flag('--voice');
   if (!voice) { console.error('synth needs --voice <gradium voice id>'); process.exit(2); }
   for (const name of clipNames) {
     const r = ref[name];
-    const text = r.reference.replace(/\s*⏸\s*/g, ' ').trim(); // localized clones take ≤300 chars, REST only
-    const res = await fetch('https://api.gradium.ai/api/post/speech/tts', {
-      method: 'POST', headers: { 'x-api-key': GRADIUM_KEY, 'content-type': 'application/json' },
-      body: JSON.stringify({ text, voice_id: voice, output_format: 'pcm', model_name: 'default', only_audio: false,
-        json_config: JSON.stringify({ temp: 0.5, rewrite_rules: r.language }) }), // a JSON-encoded string on REST
-    });
-    if (!res.ok) { console.error(`${name}: HTTP ${res.status} ${(await res.text()).slice(0, 300)}`); continue; }
-    let rate = 48000;
-    const pcm = [];
-    for (const line of (await res.text()).split('\n')) {
-      const t = line.trim().replace(/^data:\s*/, '');
-      if (!t) continue;
-      const m = JSON.parse(t);
-      if (m.type === 'ready' && m.sample_rate) rate = m.sample_rate;
-      else if (m.type === 'audio') pcm.push(Buffer.from(m.audio, 'base64'));
-      else if (m.type === 'error') throw new Error(`${name}: TTS error ${JSON.stringify(m)}`);
-    }
+    // `tts_text` spells words phonetically for the voice (e.g. "PR" the English way); scoring stays on `reference`.
+    const pieces = (r.tts_text ?? r.reference).split(/\s*⏸\s*/).map((p) => p.trim()).filter(Boolean);
+    const rendered = [];
+    for (const piece of pieces) rendered.push(await gradiumTts(piece, voice, r.language));
+    const rate = rendered[0].rate;
     const silence = (s) => Buffer.alloc(Math.round(rate * s) * 2);
-    const audio = Buffer.concat([silence(1), ...pcm, silence(1)]); // lead-in: Gradium STT drops a word at 0.0 s
+    // 1 s lead-in (Gradium STT drops a word at 0.0 s) and tail; 2 s for each ⏸.
+    const audio = Buffer.concat([silence(1), ...rendered.flatMap((x, i) => (i ? [silence(2), x.pcm] : [x.pcm])), silence(1)]);
     writeFileSync(path.join(CLIPS, `${name}.wav`), wavFromPcm(audio, rate));
-    console.log(`${name}: ${voice} → clips/${name}.wav (${(audio.length / 2 / rate).toFixed(1)} s at ${rate} Hz)`);
+    console.log(`${name}: ${voice} → clips/${name}.wav (${(audio.length / 2 / rate).toFixed(1)} s at ${rate} Hz, ${pieces.length} piece${pieces.length === 1 ? '' : 's'})`);
+    console.log(`  text sent: ${pieces.join(' ⏸ ')}`);
   }
+}
+
+async function gradiumTts(text, voice, language) {
+  const res = await fetch('https://api.gradium.ai/api/post/speech/tts', {
+    method: 'POST', headers: { 'x-api-key': GRADIUM_KEY, 'content-type': 'application/json' },
+    body: JSON.stringify({ text, voice_id: voice, output_format: 'pcm', model_name: 'default', only_audio: false, // localized clones: ≤300 chars, REST only
+      json_config: JSON.stringify({ temp: 0.5, rewrite_rules: language }) }), // a JSON-encoded string on REST
+  });
+  if (!res.ok) throw new Error(`TTS HTTP ${res.status} ${(await res.text()).slice(0, 300)}`);
+  let rate = 48000;
+  const pcm = [];
+  for (const line of (await res.text()).split('\n')) {
+    const t = line.trim().replace(/^data:\s*/, '');
+    if (!t) continue;
+    const m = JSON.parse(t);
+    if (m.type === 'ready' && m.sample_rate) rate = m.sample_rate;
+    else if (m.type === 'audio') pcm.push(Buffer.from(m.audio, 'base64'));
+    else if (m.type === 'error') throw new Error(`TTS error ${JSON.stringify(m)}`);
+  }
+  return { rate, pcm: Buffer.concat(pcm) };
 }
 
 // ---- report -----------------------------------------------------------------

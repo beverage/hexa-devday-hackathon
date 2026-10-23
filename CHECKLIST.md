@@ -8,8 +8,9 @@
       batch answered on all five smoke clips, 10-23)
 - [x] OpenAI: redeem the Accel $50; `OPENAI_API_KEY` in the same file; one chat completion from this folder works
       (`gpt-5.4-nano`, 10-23; the key also sees `gpt-transcribe`, `gpt-live-transcribe`, `gpt-4o-transcribe`, `whisper-1`)
-- [ ] **STT spike** (`stt-spike/README.md`): record 5 clips → `convert` → `all` → `report` → decision line at the
-      top of its README. Done when D-003 in `DECISIONS.md` is no longer "pending"
+- [x] **STT spike** (`stt-spike/README.md`): record 5 clips → `convert` → `all` → `report` → decision line at the
+      top of its README. Done when D-003 in `DECISIONS.md` is no longer "pending" → **D-007: ElevenLabs** (1 real
+      clip, 3 synthesized in the clone; `de-learner` not recorded)
 - [ ] Codex CLI installed and signed in; Codex MCP config pointing at the Levelang MCP server, verified by one
       `translate` call (the Codex-workflow story needs this to be real)
 - [ ] Message Boris via "Contact the host" with the two rules questions (text in `BRIEF.md`)
