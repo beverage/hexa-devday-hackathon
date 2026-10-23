@@ -107,6 +107,15 @@ The **ElevenLabs realtime leg** (`eleven-rt`, added 10-23) needs no SDK: a raw W
 `commit_strategy=vad`, `include_timestamps` and `include_language_detection`; `input_audio_chunk` messages of 80 ms,
 the last one with `commit: true`. Each committed segment brings word timestamps (continuous across commits) and
 `logprob`, both undocumented-to-unknown before. The server closes with 1005/1006 after the final commit; harmless.
+Partials (saved since 10-23) show where the "tu peux" rewrite happens: the partial reads "tu peux m'aider ?" ~0.8 s
+after it is said, and ~1 s later, when "Euh, merci" arrives, the model re-decodes it to "vous pouvez" in the same
+time slots, and that is what gets committed. The session echoes an undocumented `max_tokens_to_recompute: 5`, but
+the server ignores it as a query parameter (`--recompute 0` and `1` both came back 5, same rewrite). So a word that
+changes between partial and commit, or has a logprob under −1, is the cue to trust the batch re-read for that turn.
+Two more knobs tried on the four French clips (10-23): `--commit turn_prediction` is refused ("not supported by
+model_id 'scribe_v2_realtime'", the only realtime model), so silence-based VAD is the only automatic turn end; and
+`--secondary en` (`secondary_languages=en`, echoed back) changed nothing: same transcripts, still "PIAR", 18/21.
+Across three fr-short runs VAD at 1.5 s committed 11 of 12 real turn ends on time, about 2–2.7 s after the last word.
 In the browser, use a single-use token (`?token=`) instead of the key.
 
 ## 3. Read the report (20 min)

@@ -95,6 +95,11 @@ not as the agent's voice. Lesson from its judging: the payoff must be on the lan
 
 ## 6. Narration angle: Levelang calibration on GPT
 
+**Out for the weekend (D-010, 10-23):** the GPT render prompts failed under test and won't be tuned by the
+deadline, so the render stays on Gemini and this line stays off the stage. The OpenAI story is the brain, the judge,
+the evaluation and Codex instead: "OpenAI decides what to say and reads how you speak; Levelang decides how to say
+it." The original idea, kept for after the weekend:
+
 The backend supports OpenAI models with per-model prompts; the 19-category harness and dual judge can be pointed
 at GPT models on the French set in about an hour. "Same prompt, three providers, here is who holds register in
 German" is a line Codex Ambassadors understand, and it makes the OpenAI rule part of the product story rather
@@ -103,10 +108,12 @@ than a compliance box. Background task, not the spine.
 ## 7. Out of scope this weekend
 
 Spanish (D-004) · the clone as the agent voice (D-001) · Lightdash / Modal / n8n extras · Mandarin, Cantonese,
-Japanese voice · Pro clones · the MCP App widget as a demo surface (judges won't install Claude Desktop).
+Japanese voice · Pro clones · the MCP App widget as a demo surface (judges won't install Claude Desktop) ·
+Levelang rendering on GPT models (§ 6, D-010).
 
 ## 8. Open questions
 
-Kickoff rules (BRIEF.md) · STT provider (spike) · does the `context` field land this weekend · Stripe and email
-beats in or out · which OpenAI model for the turn loop vs the judge · one page: Expo web, the website, or a
-standalone page in this repo.
+Kickoff rules (BRIEF.md) · does the `context` field land this weekend · Stripe and email beats in or out ·
+exact OpenAI models for the brain and the judge (roles in D-010; pick from Saturday's draft and judge timing) ·
+does a French draft via auto-detect beat the English draft (D-009) · one page: Expo web, the website, or a
+standalone page in this repo. Decided 10-23: STT provider (D-007), response-config design (D-009).

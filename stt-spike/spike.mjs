@@ -273,17 +273,26 @@ const lowLogprob = (words) => words.filter((w) => typeof w.logprob === 'number')
 async function elevenRt() {
   need(ELEVEN_KEY, 'ELEVENLABS_API_KEY');
   const silence = Number(flag('--silence') ?? 1.5);
+  const strategy = flag('--commit') ?? 'vad'; // vad | turn_prediction | manual (manual only commits with the last chunk)
+  const secondary = flag('--secondary')?.split(',').filter(Boolean) ?? []; // e.g. en, for the Franglais jargon
   for (const name of clipNames) {
     const r = ref[name];
     const { sampleRate, pcm } = wavPcm(readFileSync(wavPath(name)));
     if (sampleRate !== 24000 || !pcm) throw new Error(`${name}: need a 24 kHz wav (run convert), got ${sampleRate}`);
-    const q = new URLSearchParams({ model_id: 'scribe_v2_realtime', audio_format: 'pcm_24000', commit_strategy: 'vad',
-      vad_silence_threshold_secs: String(silence), include_timestamps: 'true', include_language_detection: 'true' });
+    const q = new URLSearchParams({ model_id: 'scribe_v2_realtime', audio_format: 'pcm_24000', commit_strategy: strategy,
+      include_timestamps: 'true', include_language_detection: 'true' });
+    if (strategy === 'vad') q.set('vad_silence_threshold_secs', String(silence));
+    for (const l of secondary) q.append('secondary_languages', l);
     if (has('--lang')) q.set('language_code', r.language);
+    // Undocumented: session_started echoes max_tokens_to_recompute (5 by default), how far back the model may re-decode.
+    // It rewrote a correct partial "tu peux" as "vous pouvez" on fr-beginner. As of 10-23 the server ignores this query
+    // parameter (0 and 1 both echo back 5); kept in case ElevenLabs exposes it.
+    const recompute = flag('--recompute');
+    if (recompute != null) q.set('max_tokens_to_recompute', recompute);
 
     const result = await new Promise((resolve, reject) => {
       const ws = new WebSocket(`wss://api.elevenlabs.io/v1/speech-to-text/realtime?${q}`, { headers: { 'xi-api-key': ELEVEN_KEY } });
-      const msgs = [], commits = [], lateErrors = [];
+      const msgs = [], commits = [], lateErrors = [], partials = [];
       let config = null, sentS = 0, tLastAudio = null, tFinal = null, idle = null;
       const t0 = performance.now();
       const finish = () => { clearTimeout(idle); ws.close(); };
@@ -291,7 +300,11 @@ async function elevenRt() {
         const text = typeof ev.data === 'string' ? ev.data : Buffer.from(await ev.data.arrayBuffer()).toString();
         const m = JSON.parse(text);
         if (m.message_type === 'session_started') { config = m.config; streamAudio().catch(reject); return; }
-        if (m.message_type === 'partial_transcript') return;
+        // Partials show how the text evolved before the commit (e.g. whether a word was revised); keep the changes only.
+        if (m.message_type === 'partial_transcript') {
+          if (m.text && m.text !== partials.at(-1)?.text) partials.push({ audio_s: Number(sentS.toFixed(2)), text: m.text });
+          return;
+        }
         msgs.push({ ...m, t_ms: Math.round(performance.now() - t0), audio_s: Number(sentS.toFixed(2)) });
         if (m.error) {
           // After the last audio, a throttled or empty final commit is noise, not a failure.
@@ -310,7 +323,7 @@ async function elevenRt() {
         // An unclean close after the last audio still leaves every commit in hand; one mid-stream is a failure.
         if (!tLastAudio) return reject(new Error(`socket closed at ${sentS.toFixed(2)} s of audio (code ${ev.code} ${ev.reason || ''} ${wsError ?? ''}); last messages ${JSON.stringify(msgs.slice(-2)).slice(0, 400)}`));
         if (wsError || ![1000, 1005].includes(ev.code)) lateErrors.push(`close ${ev.code} ${ev.reason || wsError || ''}`.trim());
-        resolve({ config, msgs, commits, lateErrors, tail_ms: tFinal && tLastAudio ? Math.round(tFinal - tLastAudio) : null });
+        resolve({ config, msgs, commits, lateErrors, partials, tail_ms: tFinal && tLastAudio ? Math.round(tFinal - tLastAudio) : null });
       });
       async function streamAudio() {
         const chunk = 3840; // 80 ms at 24 kHz, 16-bit mono
@@ -328,13 +341,14 @@ async function elevenRt() {
     const all = result.commits.flatMap((c) => c.words);
     const words = realWords(all);
     const out = {
-      provider: 'eleven-rt', variant: `vad${silence}${has('--lang') ? '-lang' : ''}`, clip: name, config: result.config,
+      provider: 'eleven-rt', clip: name, config: result.config,
+      variant: `${strategy === 'vad' ? `vad${silence}` : strategy}${has('--lang') ? '-lang' : ''}${secondary.length ? `-sec${secondary.join('+')}` : ''}${recompute != null ? `-rc${recompute}` : ''}`,
       // Detected per commit, so a one-word turn ("Oui.") can come back as another language: keep them all.
       language_code: [...new Set(result.commits.filter((c) => c.text.trim()).map((c) => c.language_code))].join('/') || null,
       transcript: result.commits.map((c) => c.text).join(' ').replace(/\s+/g, ' ').trim(),
       commits: result.commits.filter((c) => c.text.trim()).map(({ audio_s, text, language_code }) => ({ audio_s, text, language_code })),
       late_errors: result.lateErrors,
-      tail_ms: result.tail_ms, words: all, timing: timing(words), low_logprob: lowLogprob(words), messages: result.msgs,
+      tail_ms: result.tail_ms, words: all, timing: timing(words), low_logprob: lowLogprob(words), partials: result.partials, messages: result.msgs,
     };
     save(`${name}.eleven-rt.${out.variant}.json`, out);
     console.log(`${name}/${out.variant} (final commit ${out.tail_ms} ms after last audio, ${out.language_code}): ${out.transcript}`);

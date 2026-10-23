@@ -16,8 +16,9 @@
 - [ ] Message Boris via "Contact the host" with the two rules questions (text in `BRIEF.md`)
 - [ ] `git init` here; first commit (this folder); decide public/private after the kickoff answers the submission question
 - [ ] Deploy target chosen and warm: Fly.io `cdg` (Levelang's home) or Vercel; a hello-world page is live at a URL
-- [ ] Which OpenAI model(s) have tuned Levelang prompts: `llc db language fra -L beginner --instruction -m <model>`
-      or `GET /api/v1/admin/models` → note them in `IDEA.md` § 6
+- [x] Which OpenAI model(s) have tuned Levelang prompts: `llc db language fra -L beginner --instruction -m <model>`
+      or `GET /api/v1/admin/models` → note them in `IDEA.md` § 6 → **none usable**: GPT prompts failed under test,
+      render stays on Gemini (D-010)
 - [ ] Read `levelang-backend/supabase/functions/chat/index.ts` end to end; note what to keep for the agent spine
 
 ## Saturday 24 Oct
@@ -50,3 +51,9 @@
 - [ ] If finalist: 2-minute live demo (mic beat), console on the screen, fallback video ready
 - [ ] Hexa people and the ambassadors: introductions; LinkedIn QR
 - [ ] If it wins: DevDay Exchange Paris, Wed 28 Oct from 14:00
+
+## After
+
+- [ ] **Downgrade ElevenLabs Creator → Free before Mon 23 Nov** (next invoice $26.40, ~20:11 Paris). Calendar
+      reminder Fri 20 Nov 10:00, with an email the day before. Done when the subscription page shows the pending
+      change to Free
