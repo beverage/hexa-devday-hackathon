@@ -170,20 +170,50 @@ vs 76 tokens) and the cell takes twice as long (French 1.61 s → 0.81 s, German
 is the difference between a six-second turn and a five-second one, and it compounds across the three cells rendered
 per turn and the six turns of a demo.
 
-**The change, in `levelang-backend` on a branch:** an optional request field, `transliteration: bool = true`, on
-`TranslationRequest`. When false, the prompt service substitutes `Set "transliteration": null in your JSON response.`
-for the language's transliteration instruction, and the response schema keeps the nullable field (so parsing and the
-apps are untouched). Default stays true: the app and the reader keep their pronunciation line. The agent sends
-`false` on every call. Cache key must include the flag, since the system prompt differs. One test: a request with
-`transliteration=false` returns `transliteration: null` and never the phonetic string. Expose it through
-`levelang-mcp` as an optional tool argument later; the agent calls REST directly this weekend.
+**The change, built 24 Oct in `levelang-backend` (`e0fc85b`, deployed to staging; DEC-049, BL-179):** an optional
+request field, **`include_transliteration: bool = true`**, on `TranslationRequest` (`/translate` and
+`/translate/stream`). Renamed from the first sketch's `transliteration`: the mobile app already sends
+`include_transliteration` from its "Include transliteration" settings toggle, which was a no-op because the backend
+dropped the field; it now takes effect. When false, the prompt service substitutes `Set "transliteration": null in
+your JSON response.` for the language's transliteration instruction, the response schema keeps the nullable field (so
+parsing and the apps are untouched), and the backend forces `transliteration: null` even if the model writes one.
+Default stays true: the reader and the MCPs keep their pronunciation line. The agent sends
+`include_transliteration: false` on every call. No cache-key change: the Gemini context cache is off
+(`GEMINI_CACHE_ENABLED = False`) and opted-out requests skip it anyway; Vertex's implicit prefix cache still matches,
+since the transliteration line comes last. Tests: the opted-out prompt differs from the default by that line only; the
+service returns null and sends no cache key; the API defaults the field to true. Expose it through `levelang-mcp` as
+an optional tool argument later; the agent calls REST directly this weekend.
 
 **Why not just null the instruction in the database:** the mobile app and the reader show it, and a data change
 reaches every client at once; a request flag changes nothing for anyone who does not ask.
 
-**Decision home:** a `/decide` entry in the Levelang parent repo and a backlog item there, since it changes the
-public request contract; this file is the hackathon-side record until then. About an hour of work including the
-test and a staging deploy; deploy only when green, never with `supabase config push`.
+**Decision home:** DEC-049 and BL-179 in the Levelang parent repo, since it changes the public request contract.
+
+### Measured 24 Oct 15:55: the opt-out on staging, end to end
+
+Deployed as `e0fc85b` (staging run #86). `agent/probe-render.mjs`, the turn-1 draft (38 words), spoken, default model
+(`gemini-3.1-flash-lite` on Vertex), 3 runs each, median, run once without and once with `--no-transliteration`:
+
+| Cell | Transliteration on | Off | |
+|---|---|---|---|
+| fra beginner/formal | 1.78 s | 0.90 s | |
+| fra intermediate/formal | 1.82 s | 0.78 s | |
+| fra fluent/formal | 1.81 s | 0.88 s | |
+| fra fluent/casual | 1.56 s | 1.02 s | |
+| deu beginner/formal | 1.61 s | 1.04 s | |
+| **3 cells in parallel** (fra beginner/intermediate/advanced) | **1.92 s** | **1.05 s** | the turn's render leg |
+
+Cross-check with on/off runs alternating on each cell (scratch `ab-translit.mjs`, 3 pairs): fra beginner 1.69 → 0.81 s
+(233 → 76 output tokens), fra intermediate 1.80 → 0.76 s (230 → 75), deu intermediate 1.86 → 0.93 s (238 → 82);
+`transliteration` null 3/3 with the flag off, present 3/3 without it. So the backend change delivers the full saving the
+hand-built Vertex probe predicted: **the render leg drops from ~1.9 s to ~1.0 s**, and a French turn is draft ≈ 1.7 s +
+render ≈ 1.0 s + realtime commit ≈ 2 s, **about 4.7 s instead of 5.6 s**. Spot check of the renders: 142 euros, the
+three instalments and *vous*/*tu* survive every cell with the flag off. The quality suite itself runs with the default
+(transliteration on), so the opt-out renders have no quality coverage beyond this spot check.
+
+Side finding: the deploy's translation-quality job failed (0 % pass rate) because its **judge** runs on the CI runner
+with the AI Studio key, which is out of prepaid credits (402); the 44 renders it judged had all succeeded against
+staging. Every staging deploy will show this red until AI Studio is topped up or the judge moves to Vertex (BL-031).
 
 ## 4. Voice (Sunday morning)
 

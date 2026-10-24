@@ -1,5 +1,5 @@
 // Times the Levelang render leg: one cell at a time, then the three neighbouring cells in parallel.
-// Usage: node agent/probe-render.mjs [--runs 3] [--url https://levelang-backend-staging.fly.dev/api/v1] [--model <id>]
+// Usage: node agent/probe-render.mjs [--runs 3] [--url https://levelang-backend-staging.fly.dev/api/v1] [--model <id>] [--no-transliteration]
 // Key: LEVELANG_API_KEY from ../.env, else LLB_STAGING_API_KEY from ~/Code/Apps/levelang/levelang-backend/.env.
 import fs from 'node:fs';
 import path from 'node:path';
@@ -15,12 +15,14 @@ const arg = (f, d) => { const i = process.argv.indexOf(f); return i > -1 ? proce
 const URL = arg('--url', 'https://levelang-backend-staging.fly.dev/api/v1');
 const RUNS = Number(arg('--runs', '3'));
 const MODEL = arg('--model', null);
+const NO_TRANSLIT = process.argv.includes('--no-transliteration'); // DEC-049: include_transliteration=false
 const fixture = JSON.parse(fs.readFileSync(path.join(here, 'fixtures', 'scenario-1.json'), 'utf8'));
 const TEXT = 'I understand. Your October payment of 142 euros was returned by your bank. Nobody is cutting your electricity today. I can split the amount into three monthly payments and text you a secure link for the first one.';
 
 async function render(level, mood = 'formal', target = 'fra') {
   const body = { text: TEXT, source_language_code: 'eng', target_language_code: target, level, mood, mode: 'spoken' };
   if (MODEL) body.model = MODEL;
+  if (NO_TRANSLIT) body.include_transliteration = false;
   const t0 = performance.now();
   const res = await fetch(`${URL}/translate`, { method: 'POST', headers: { authorization: `Bearer ${KEY}`, 'content-type': 'application/json' }, body: JSON.stringify(body) });
   const ms = performance.now() - t0;
@@ -33,7 +35,7 @@ const f = v => `${(v / 1000).toFixed(2)} s`;
 
 const cells = [['beginner', 'formal', 'fra'], ['intermediate', 'formal', 'fra'], ['fluent', 'formal', 'fra'], ['fluent', 'casual', 'fra'], ['beginner', 'formal', 'deu']];
 const out = {}; let modelSeen = null;
-console.log(`Levelang render benchmark, ${URL}, ${new Date().toISOString().slice(0, 16)}Z, ${RUNS} runs each\n`);
+console.log(`Levelang render benchmark, ${URL}, ${new Date().toISOString().slice(0, 16)}Z, ${RUNS} runs each${NO_TRANSLIT ? ', no transliteration' : ''}\n`);
 console.log('| Cell | Median | Min | Max |'); console.log('|---|---|---|---|');
 for (const [level, mood, target] of cells) {
   const times = []; let last;
