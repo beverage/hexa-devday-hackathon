@@ -161,6 +161,30 @@ needed so renders stay consistent (terms, tu/vous, pronouns) across the call.
   (reverses part of DEC-036) and a backlog item.
 - Decide Saturday whether it lands this weekend or the agent carries consistency in its own prompt for the demo.
 
+## 3b. Transliteration opt-out for Levelang (the second product change, needed this weekend)
+
+**The need, measured 24 Oct 12:40 (§ 2):** every French, German and Italian render carries a `TRANSLITERATION
+REQUIRED` instruction and a `transliteration` field in the response schema, so the model writes a phonetic version
+of every reply. The agent never shows it, and it is the single largest cost on the render path: output triples (230
+vs 76 tokens) and the cell takes twice as long (French 1.61 s → 0.81 s, German 1.43 s → 1.06 s, Vertex, 3 runs). It
+is the difference between a six-second turn and a five-second one, and it compounds across the three cells rendered
+per turn and the six turns of a demo.
+
+**The change, in `levelang-backend` on a branch:** an optional request field, `transliteration: bool = true`, on
+`TranslationRequest`. When false, the prompt service substitutes `Set "transliteration": null in your JSON response.`
+for the language's transliteration instruction, and the response schema keeps the nullable field (so parsing and the
+apps are untouched). Default stays true: the app and the reader keep their pronunciation line. The agent sends
+`false` on every call. Cache key must include the flag, since the system prompt differs. One test: a request with
+`transliteration=false` returns `transliteration: null` and never the phonetic string. Expose it through
+`levelang-mcp` as an optional tool argument later; the agent calls REST directly this weekend.
+
+**Why not just null the instruction in the database:** the mobile app and the reader show it, and a data change
+reaches every client at once; a request flag changes nothing for anyone who does not ask.
+
+**Decision home:** a `/decide` entry in the Levelang parent repo and a backlog item there, since it changes the
+public request contract; this file is the hackathon-side record until then. About an hour of work including the
+test and a staging deploy; deploy only when green, never with `supabase config push`.
+
 ## 4. Voice (Sunday morning)
 
 - Input STT: decided by `stt-spike/` (D-003). Output: stock voice, no clone (D-001); Gradium for fr/de via the

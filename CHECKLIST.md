@@ -46,6 +46,9 @@
 - [ ] Agent loop: OpenAI draft → Levelang render (current cell + neighbours) → judge update → next turn, text in / text out
 - [ ] Console page: transcript, English draft, rendered cells with the chosen one highlighted, level/register meter
 - [ ] `context` field in `levelang-backend` (branch) **or** consistency carried in the agent prompt — decide by 14:00
+- [ ] **Transliteration opt-out** in `levelang-backend` (branch, `IDEA.md` § 3b): `transliteration=false` on the request
+      halves the render (fra 1.61 → 0.81 s). Test green, staging deployed, `/decide` + backlog item in the Levelang
+      parent repo; the agent sends `false` on every call
 - [ ] Scripted rejected-direct-debit conversation (`DEMO.md` scenario 1, 8 turns) runs end to end; beats (1) and (2)
       visible; 142 € and 47,33 € survive the beginner render
 - [ ] **Freeze 22:00: the text demo is the submission floor.** Commit, deploy, check from a logged-out browser
