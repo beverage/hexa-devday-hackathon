@@ -1,7 +1,8 @@
 # BRIEF — DevDay Exchange Community: Paris
 
-Compiled 2026-10-23 17:30 from the Luma page, the 10-18 prep note, and Boris's kickoff email (Fri 16:16).
-Judging criteria, submission format and the Sunday selection mechanics are **not published**: ask at the kickoff.
+Compiled 2026-10-23 17:30 from the Luma page, the 10-18 prep note, and Boris's kickoff email (Fri 16:16); tracks and
+the product grading added Sat 24 Oct from the kickoff. Submission format and the Sunday selection mechanics: record
+the kickoff answers in this file as they come.
 
 ## Clock (Paris time)
 
@@ -25,10 +26,24 @@ Judging criteria, submission format and the Sunday selection mechanics are **not
 - **Status:** Alex is approved (Hackathon participants ticket, 19 Oct). Event page
   https://luma.com/6nccj7gu · calendar: kickoff event created 10-23, finale event from Luma.
 
+## Tracks and grading (kickoff, Sat 24 Oct 10:00)
+
+Three tracks; **entering more than one compounds**. Judges also grade on the entry **being an immediate product**.
+
+| Track | What counts | Us |
+|---|---|---|
+| **Impact** | Disability inclusion (assistive tools) · new opportunities (jobs, education) · poverty reduction (affordable essentials) · climate action (energy, waste, emissions) | **Primary** (D-011): customer service that meets the caller at their level, in essential-service settings (electricity supplier, job interview). Topics claimed: assistive (the instant re-say), affordable essentials, jobs. No climate claim. |
+| **Build in public** | Anything; **reach is measured** | **Secondary** (D-012): public repo with the decisions log as devlog, four posts over the weekend. No pre-existing reach, so the artefacts are the score unless a reach teammate joins. |
+| **Hardware** | A physical build | No: no materials. |
+
+**Team (D-014):** four people, formed at the kickoff (Alex + three; record names, roles, Monday attendance and any
+reach here). Everyone builds, one seam each (D-013). Alex pitched D-011; the team brainstorms the impact track for 30 minutes and may pivot.
+
 ## What the judges are primed for (inference, not published)
 
 Codex Ambassadors judging a Codex community event ahead of DevDay: Codex workflows, OpenAI models doing real
-work, something shipped and demoable. A calibration layer that any voice agent can point its model setting at
+work, something shipped and demoable, and (said at the kickoff) an immediate product: a live URL a business could
+switch on, not a prototype. A calibration layer that any voice agent can point its model setting at
 is a company-shaped story; the "same prompt, three providers, who holds register in German" harness line is
 one they understand.
 

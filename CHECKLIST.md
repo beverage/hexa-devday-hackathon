@@ -25,14 +25,25 @@
 
 - [ ] 09:45 voice recorder running; 10:00 kickoff (link in the calendar); questions in the chat
       (`BRIEF.md`); redeem the kickoff credits
-- [ ] 10:30 build decision recorded in `DECISIONS.md` (spine, page, provider, what is cut); strategist once
+- [x] Kickoff: tracks (impact · build in public · hardware), "tracks compound", "graded as an immediate product" →
+      `BRIEF.md`; the two rules questions and the submission format: write the answers into `BRIEF.md`
+- [x] 10:30 build decision recorded in `DECISIONS.md` → **D-011 impact reframe** (spine unchanged; electricity
+      supplier, job interview, person-first pitch), **D-012 build in public**, **D-013 team roles**
+- [x] Slide facts checked with caveats (INSEE 7.7 M immigrants 2024 · EAA since 28 Jun 2025 · FALC) → `IDEA.md` § 0
+- [x] Team of four formed at the kickoff (D-014); names, roles, Monday attendance and reach → `BRIEF.md`
+- [ ] 30-minute team brainstorm on impact, voice-recorded; D-014 closed with the build decision (pitch kept or
+      pivot) in `DECISIONS.md`; then the first commit and the URL
+- [ ] **Build in public (D-012), ≤ 1 h total:** public repo live (this folder scrubbed of internal paths and voice IDs,
+      or a new one) with `DECISIONS.md` as the devlog and `AGENTS.md`; post 1 (the build decision; tag Hexa and the
+      ambassadors; event channel) by 13:00; post 2 (the text loop) after the 22:00 freeze
 - [ ] 11:30 first commit of product code; URL live
 - [ ] Detector spike: tests (2) and (4) from `IDEA.md` § 2 — a text-only judge on Levelang outputs at each level
       plus hand-written learner turns; a 20-turn timing table for draft + render
 - [ ] Agent loop: OpenAI draft → Levelang render (current cell + neighbours) → judge update → next turn, text in / text out
 - [ ] Console page: transcript, English draft, rendered cells with the chosen one highlighted, level/register meter
 - [ ] `context` field in `levelang-backend` (branch) **or** consistency carried in the agent prompt — decide by 14:00
-- [ ] Scripted failed-renewal conversation (8 turns) runs end to end; beats (1) and (2) visible
+- [ ] Scripted rejected-direct-debit conversation (`DEMO.md` scenario 1, 8 turns) runs end to end; beats (1) and (2)
+      visible; 142 € and 47,33 € survive the beginner render
 - [ ] **Freeze 22:00: the text demo is the submission floor.** Commit, deploy, check from a logged-out browser
 
 ## Sunday 25 Oct
@@ -40,8 +51,11 @@
 - [ ] Morning: voice in (the spike's provider) and out (stock voice) on the same page; filler phrase on slow turns
 - [ ] Press-play mode: the three `DEMO.md` scenarios, recorded by Alex turn by turn, play through the agent
 - [ ] Evaluation: run the simulated callers, score the detector against the planted markers; numbers for the slide
-- [ ] Optional beats if ahead: Stripe test payment link + QR; follow-up email at the same register; Mirror voice 20 s
-- [ ] 15:00 feature freeze. Two-minute video: person-with-a-problem first, then beats (1), (2), the console, the numbers
+- [ ] Posts 3 (voice, morning) and 4 (URL + video, after submission) (D-012)
+- [ ] Optional beats if ahead: Stripe test payment link + QR; confirmation email at the same register; Mirror voice
+      20 s (a beat at most, D-011)
+- [ ] 15:00 feature freeze. Two-minute video: person-with-a-problem first (tagline and impact topic in the first
+      15 s), then beats (1), (2), the console, the numbers, the honesty lines (`IDEA.md` § 0)
 - [ ] Submit whatever Sunday night asks for (from the kickoff); check URL and repo logged out; fallback video linked
 - [ ] Write the outcome line in `~/Cowork/career/companies/hexa/notes.md` and a `log.md` entry
 

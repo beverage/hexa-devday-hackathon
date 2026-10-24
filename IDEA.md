@@ -1,8 +1,40 @@
 # IDEA — a customer-service agent that calibrates to the caller's level and register
 
-Pitch line: **"The agent decides what to say. Levelang decides how to say it."** A calibration layer any voice
-agent can point its model setting at. Designed for Accel (22 Oct), scrapped there because that brief demanded
-data-dependent agents on Aiven Runtime; back on the table here with an OpenAI brain. State as of Fri 23 Oct 17:30.
+Tagline: **customer service that meets you at your level.** Tl;dr: millions of people in France deal with their
+energy bill, their job search or their bank in a language that is not their first, and the call centre answers
+everyone in the same French at the same speed. Our voice agent reads how you speak, adapts its level and register
+turn by turn, and when you don't follow, says it again simpler and slower, instantly, without changing what it
+decided. **OpenAI decides what to say; Levelang decides how to say it.** A calibration layer any voice agent can
+point its model setting at. Designed for Accel (22 Oct), scrapped there because that brief demanded data-dependent
+agents on Aiven Runtime; back on the table here with an OpenAI brain; aimed at the **impact track** since the
+kickoff (§ 0, D-011). State as of Sat 24 Oct 11:00.
+
+## 0. Tracks and framing (Sat 24 Oct, D-011)
+
+The kickoff gave three tracks (`BRIEF.md`). The agent enters **impact** as its primary track and **build in public**
+as a cheap second (D-012). Nothing in the spine changed; the settings and the first thirty seconds of the pitch did.
+
+- **Topics claimed.** Disability inclusion as comprehension accessibility: the hero moment (a caller who did not
+  follow gets the same reply re-said simpler and slower, instantly) is an assistive behaviour. Affordable essentials:
+  scenario 1 is an electricity bill turned into a payment plan instead of a cut-off. New opportunities (jobs):
+  scenario 3 is a job interview in Germany. **Not claimed:** climate, even with energy as the setting.
+- **Facts for the slide**, checked 10-24, each with its caveat:
+  - INSEE (Insee Première n° 2076, Oct 2025): **7.7 million immigrants in France in 2024** (7.6 M excluding Mayotte,
+    11.2 % of the population; 6.0 M foreign nationals). Caveat: a large share is francophone, so the spoken pitch says
+    "millions"; the slide shows the figure with the caveat.
+  - **European Accessibility Act** (Directive (EU) 2019/882), applicable since **28 June 2025** to banking, e-commerce,
+    electronic communications and transport services; microenterprises exempt. Caveat: it makes accessibility of these
+    services a legal duty and asks support channels to inform about it; it does not prescribe plain-language calls.
+    Cite as context, never as compliance.
+  - **FALC** (facile à lire et à comprendre): the European easy-to-read rules from the 2009 Inclusion Europe
+    "Pathways" project, adapted for France by Unapei and Nous Aussi, about 60 rules including review by people with
+    intellectual disabilities. Caveat: Levelang *beginner* shares the sentence-level rules (short sentences, one idea
+    each, common words) and none of the process rules. **Say "close to easy-to-read, not FALC-certified."**
+- **Honesty lines** (evaluation slide): the demo caller is Alex performing a non-native speaker (a genuine one for
+  the beginner turns if D-013 lands); no testing with disabled users yet; the detector has no test coverage until
+  Saturday's spike.
+- **Immediate product** (graded, per the kickoff): a deployed endpoint any voice agent points at, a live URL with no
+  sign-in, press-play callers; one curl line on the console or the slide.
 
 ## 1. The spine (Saturday)
 
@@ -22,11 +54,12 @@ console (one page): transcript · English draft · the rendered cells · level/r
   tool-calling assistant (Gemini via Vertex) that extracts level/mood/mode from the conversation and calls
   `translate` / `translate_compare` against the backend, with per-user turn limits. Swap the brain to an
   OpenAI model, replace "the user names the level" with the detector, and that is day one.
-- Demo scenario: a **failed-renewal call**. (1) caller hesitates → agent simplifies and slows; (2) caller turns
-  formal → agent follows; (3) agent sends a Stripe test-mode payment link, judge pays with 4242; (4) follow-up
-  email lands in the same level and register (Levelang's Supabase email automation exists); (5) evaluation scores
-  from the simulated callers. Stripe and email are stretch; (1), (2) and (5) are the pitch. Now scenario 1 of three
-  in `DEMO.md` (with a negotiated purchase and a German shop → French call).
+- Demo scenario: a **rejected direct debit at a fictional electricity supplier**, turned into a payment plan
+  instead of a cut-off (D-011). (1) caller hesitates → agent simplifies and slows; (2) caller turns formal → agent
+  follows; (3) agent sends a Stripe test-mode link for the first instalment, judge pays with 4242; (4) the
+  confirmation email lands in the same level and register (Levelang's Supabase email automation exists); (5)
+  evaluation scores from the simulated callers. Stripe and email are stretch; (1), (2) and (5) are the pitch.
+  Scenario 1 of three in `DEMO.md` (with a negotiated purchase and a job interview in Germany → French).
 
 ## 2. The detector (the unproven core; spike it Saturday morning)
 
@@ -92,7 +125,9 @@ needed so renders stay consistent (terms, tu/vous, pronouns) across the call.
 voice.levelang.app + public repo `beverage/levelang-voice`: record 15 s → Gradium clone → Voice Localization →
 each grid cell playable in your own voice, pace per level, accent picker. Proven 10-18 ("those are great").
 Useful as a 20-second beat ("and when the customer speaks for themselves, the same calibration in their voice"),
-not as the agent's voice. Lesson from its judging: the payoff must be on the landing page.
+not as the agent's voice. Lesson from its judging: the payoff must be on the landing page. Decided 10-24 (D-011): a
+beat at most, never the spine; its one assistive angle (voice banking for people losing their speech) has no OpenAI
+role and thin new work.
 
 ## 6. Narration angle: Levelang calibration on GPT
 
@@ -110,11 +145,12 @@ than a compliance box. Background task, not the spine.
 
 Spanish (D-004) · the clone as the agent voice (D-001) · Lightdash / Modal / n8n extras · Mandarin, Cantonese,
 Japanese voice · Pro clones · the MCP App widget as a demo surface (judges won't install Claude Desktop) ·
-Levelang rendering on GPT models (§ 6, D-010).
+Levelang rendering on GPT models (§ 6, D-010) · any climate claim (D-011) · Mirror voice as the spine (D-011).
 
 ## 8. Open questions
 
-Kickoff rules (BRIEF.md) · does the `context` field land this weekend · Stripe and email beats in or out ·
+Team seams and owners (D-013) · kickoff rules (BRIEF.md) · does the `context` field land this weekend · Stripe and email beats in or out ·
 exact OpenAI models for the brain and the judge (roles in D-010; pick from Saturday's draft and judge timing) ·
 does a French draft via auto-detect beat the English draft (D-009) · one page: Expo web, the website, or a
-standalone page in this repo. Decided 10-23: STT provider (D-007), response-config design (D-009).
+standalone page in this repo. Decided 10-23: STT provider (D-007), response-config design (D-009). Decided 10-24: impact-track reframe (D-011),
+build in public (D-012), team roles: everyone builds (D-013).

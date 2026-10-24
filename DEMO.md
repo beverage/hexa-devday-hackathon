@@ -1,17 +1,26 @@
 # DEMO — three scenarios
 
-Written 2026-10-24 (night) from the session that ran the STT spike. The pitch: **"OpenAI decides what to say and
-reads how you speak; Levelang decides how to say it."** Every scenario below is one agent, one caller, and the
-caller's level and register moving under it. Brands are fictional placeholders; rename freely, never use a real one.
+Written 2026-10-24 (night) from the session that ran the STT spike; reframed Sat 24 Oct after the kickoff for the
+**impact track** (D-011): same spine, essential-service settings, person-first pitch.
 
-| | Live, Mon 26 Oct (2 min) | Press-play, Sun 25 Oct night |
-|---|---|---|
-| **1. Le prélèvement a échoué** (support) | **Yes**: lowest risk, French only, Alex's natural Franglais | Yes |
-| **2. Le vélo de la rue Martel** (negotiated purchase) | Alternative, if the negotiation logic is solid by Sunday 15:00 | **Yes, lead card** |
-| **3. Wo ist mein Paket ?** (German shop → French) | No: the language switch is too risky live | Yes, once the switch works |
+**Tagline:** customer service that meets you at your level. **Pitch:** millions of people in France deal with their
+energy bill, their job search or their bank in a language that is not their first, and the call centre answers
+everyone in the same French at the same speed. Our voice agent reads how you speak, adapts its level and register turn
+by turn, and when you don't follow, says it again simpler and slower, instantly, without changing what it decided.
+**OpenAI decides what to say; Levelang decides how to say it.**
+
+Every scenario below is one agent, one caller, and the caller's level and register moving under it. Settings are
+essential services; brands are fictional placeholders (rename freely, never use a real one).
+
+| | Impact topic | Live, Mon 26 Oct (2 min) | Press-play, Sun 25 Oct night |
+|---|---|---|---|
+| **1. Le prélèvement a été rejeté** (electricity, payment plan) | Affordable essentials · assistive re-say | **Yes**: lowest risk, French only, Alex's natural Franglais | Yes |
+| **2. Le vélo de la rue Martel** (negotiated purchase) | Fairness: the price does not depend on the caller's French | Alternative, if the negotiation logic is solid by Sunday 15:00 | **Yes, lead card** |
+| **3. Der Termin am Dienstag** (job interview in Germany → French) | New opportunities (jobs) · level per language | No: the language switch is too risky live | Yes, once the switch works |
 
 Alex performs all three himself: fumbling Franglais, fluent formal French, learner German. No clone, no second
-speaker.
+speaker. If a genuine non-native French speaker joins (D-013), they record the beginner turns of scenarios 1 and 2
+and Alex keeps the fluent turns and the German.
 
 ## Shared mechanics (D-006, D-007, D-009, D-010)
 
@@ -24,55 +33,64 @@ speaker.
   The lines below put an explicit cue wherever a switch must land on that turn.
 - **Raising is careful:** without an explicit cue, a higher level needs floor evidence in 2 of the last 3 turns.
   Show it as a feature ("raising: 1/2") rather than hide it.
-- **The console** (one page): live caption that heals into the batch text · the English draft · the cell grid with
-  the chosen cell lit and its neighbours clickable · level and register meters, one pair per language · evidence chips
-  quoting the caller's words for every change · the scenario's card (account, deal, or delivery) · the payment QR.
+- **The console** (one page): the tagline as its first line · live caption that heals into the batch text · the
+  English draft · the cell grid with the chosen cell lit and its neighbours clickable · level and register meters, one
+  pair per language · evidence chips quoting the caller's words for every change · the scenario's card (account, deal,
+  or interview) · the payment QR · one curl line showing the endpoint any agent can call.
 
-Agent lines below are the **English draft intent** (what the OpenAI brain writes). French quoted for the agent in
-scenario 1 is real Levelang output from 10-23 (EN→FR, formal, spoken); elsewhere it is illustrative only.
+Agent lines below are the **English draft intent** (what the OpenAI brain writes). All quoted French and German for
+the agent is **illustrative** until re-rendered through Levelang (the 10-23 real output was for the old streaming
+setting and is retired); re-render before recording.
 
 ---
 
-## 1. « Le prélèvement a échoué » — support, failed renewal
+## 1. « Le prélèvement a été rejeté » — essentials: a payment plan instead of a cut-off
 
 **Wow it owns:** the instant repair, then the level and register following the caller.
-**Setting:** *Kiosque+* (a fictional streaming and press subscription). The renewal on 22 Oct failed: the card on
-file expired.
-**Tools (OpenAI brain):** `lookup_account(phone)` → plan, status, failure reason · `send_payment_link(amount)` →
-Stripe test-mode link + QR on the console · `retry_renewal()`.
+**Impact topics:** affordable essentials (the lights stay on); disability inclusion as comprehension accessibility
+(the re-say). No climate claim.
+**Setting:** *Lucioles Énergie* (a fictional electricity supplier). The October direct debit of 142 € was returned by
+the bank on 20 Oct; the letter the caller received mentions a possible cut-off.
+**Tools (OpenAI brain):** `lookup_account(phone)` → contract, amount due, return code, cut-off status ·
+`propose_payment_plan(months)` → three instalments of 47,33 €, the first today · `send_payment_link(amount)` → Stripe
+test-mode link + QR for the first instalment.
 
 1. **The fumble.** Caller, Franglais, hesitant:
-   > Allô ? Bonjour… euh… mon subscription, le… le payment, il est… failed ? Je sais pas comment on dit…
+   > Allô ? Bonjour… euh… j'ai reçu une lettre, le… le prélèvement, il est… rejected ? Et ça parle de coupure… Je sais
+   > pas comment on dit…
 
-   Agent (start cell, intermediate · formal): *"I understand, your renewal failed because the card on file has
-   expired. I can text you a secure payment link to update your card; the renewal will then be retried
-   automatically."*
-   > Je comprends, votre renouvellement a échoué parce que la carte enregistrée a expiré. Je peux vous envoyer par
-   > SMS un lien de paiement sécurisé pour mettre à jour votre carte ; le renouvellement sera ensuite relancé
-   > automatiquement.
+   Agent (start cell, intermediate · formal): *"I understand. Your October payment of 142 euros was returned by your
+   bank. Nobody is cutting your electricity today. I can split the amount into three monthly payments and text you a
+   secure link for the first one."*
+   > Je comprends. Votre prélèvement d'octobre, de 142 euros, a été rejeté par votre banque. Personne ne coupera votre
+   > électricité aujourd'hui. Je peux répartir le montant en trois mensualités et vous envoyer par SMS un lien
+   > sécurisé pour la première.
 
-   Console: the judge reads the batch text; chips "payment", "subscription", "comment on dit", "euh" ×2.
+   Console: the judge reads the batch text; chips "rejected", "coupure", "comment on dit", "euh" ×2. Account card:
+   142 € due, cut-off: none.
 2. **The instant repair.** Caller cuts in while the agent is still speaking:
    > Pardon… plus lentement, s'il vous plaît ?
 
    Agent stops and re-says the same reply from the beginner cell, slower, **with no pause**:
-   > Je comprends. Votre renouvellement a échoué. Votre carte a expiré. Je peux vous envoyer un lien de paiement
-   > sécurisé. Vous allez mettre à jour votre carte. Le renouvellement va se faire automatiquement.
+   > Je comprends. Votre paiement d'octobre n'est pas passé. C'est 142 euros. On ne coupe pas votre électricité. Vous
+   > pouvez payer en trois fois. Je vous envoie un lien par SMS pour le premier paiement.
 
    Console: meter drops to beginner; chip "plus lentement".
 3. **Dropping the act.** Caller, fluent formal, with the explicit cue:
-   > Excusez-moi, je reprends. J'aurais souhaité comprendre pourquoi le prélèvement n'a pas abouti, alors que ma
-   > carte était valable jusqu'à fin octobre. Vous pouvez me parler normalement.
+   > Excusez-moi, je reprends. J'aurais souhaité comprendre pourquoi le prélèvement a été rejeté alors que le compte
+   > était approvisionné. Vous pouvez me parler normalement.
 
-   Agent jumps to fluent · formal: *"Of course. Your bank declined the charge on the 22nd; banks often issue a
-   replacement card before the printed expiry date. Updating the card through the link will retry the renewal
-   immediately."* Console: chips "j'aurais souhaité", "n'a pas abouti", "vous pouvez me parler normalement".
+   Agent jumps to fluent · formal: *"Of course. Your bank returned the debit on the 20th with a 'mandate not
+   recognised' code, which usually follows a change of bank or account. The payment plan stands: the link takes the
+   first instalment by card today, and we set up the new mandate afterwards."* Console: chips "j'aurais souhaité",
+   "approvisionné", "vous pouvez me parler normalement".
 4. **Tutoiement.**
    > Parfait. Et on peut se tutoyer, hein, ce sera plus simple.
 
-   Agent, fluent · casual: *"Sure! I'm texting you the link now."* Register meter flips to *tu*. QR on screen.
-5. **Payment.** The judge scans and pays with 4242 (Stripe test mode). Agent: *"Done, your renewal went through.
-   Have a good day!"* in the *tu* cell. Stretch: the follow-up email lands in the same level and register.
+   Agent, fluent · casual: *"Sure! Sending you the link now."* Register meter flips to *tu*. QR on screen.
+5. **Payment.** The judge scans and pays 47,33 € with 4242 (Stripe test mode). Agent: *"Done, the first instalment is
+   in; the next two go through on the 5th of November and December. Your electricity stays on."* in the *tu* cell.
+   Stretch: the confirmation email lands in the same level and register.
 
 **Cut order if short on time:** 4, then the email.
 
@@ -82,6 +100,7 @@ Stripe test-mode link + QR on the console · `retry_renewal()`.
 
 **Wow it owns:** **the same deal in every cell.** The offer is decided in the English draft before calibration, so
 no caller pays more for their French. Click any cell on the grid: same price, same extras.
+**Impact topic:** fairness. A caller's level is not a reason to charge them more, and the grid proves it on screen.
 **Setting:** *Vélos Martel*, a fictional refurbished e-bike shop (a nod to Hexa's street). The agent is the seller.
 **Mandate:** list price 1 290 €; floor 1 150 €, **enforced in the tool, not the prompt**; sweeteners: antivol (60 €),
 delivery (40 €), 2-year battery warranty (90 €); 150 € deposit to reserve.
@@ -119,35 +138,43 @@ delivery (40 €), 2-year battery warranty (90 €); 150 € deposit to reserve.
 
 ---
 
-## 3. « Wo ist mein Paket ? » — a German shop, switching to French
+## 3. « Der Termin am Dienstag » — a job interview in Germany, switching to French
 
 **Wow it owns:** **level is per language.** The same caller is a beginner in German and fluent in French, and the
 console shows two meters.
-**Setting:** *Hausgut*, a fictional German online home-goods shop; delivery line. The agent starts in German.
-**Tools:** `lookup_order(order_no)` · `list_slots()` · `book_slot(slot_id)` · `send_confirmation(channel, language)`.
+**Impact topic:** new opportunities (jobs). A caller who moved for work gets the practical details in a language they
+can act on.
+**Setting:** *Brückenwerk Personal*, a fictional staffing agency in Hamburg; candidate line. The caller has an
+interview invitation for a warehouse logistics position and cannot make sense of the address and the documents list.
+The agent starts in German.
+**Tools:** `lookup_candidate(ref)` → position, interview slot, address, documents · `reschedule(slot_id)` ·
+`send_confirmation(channel, language)`. **Interview card** on the console: position, slot, address, documents.
 
 1. **Opener, learner German.**
-   > Hallo, ähm… mein Paket… gestern… es war nicht da? Die Nummer ist… ähm… HG-4471.
+   > Hallo, ähm… ich habe eine Einladung… für ein Gespräch… am Dienstag? Aber die Adresse… und die Dokumente… ich
+   > verstehe nicht gut. Meine Nummer ist… ähm… BW-2093.
 
-   Agent (German, intermediate · *Sie*): *"The courier came yesterday at 11 but nobody was home. I can rebook the
-   delivery: Tuesday the 27th between 2 and 4 pm, or Wednesday the 28th between 8 and 10 am."*
-2. **Dates are hard: the instant repair.**
-   > Entschuldigung… Dienstag oder Mittwoch? Langsamer, bitte…
+   Agent (German, intermediate · *Sie*): *"Your interview for the warehouse logistics position is on Tuesday the 27th
+   at 10 am at our Hamburg office, Speicherstraße 12, second floor. Please bring your ID and your work permit."*
+2. **Dates and documents are hard: the instant repair.**
+   > Entschuldigung… Dienstag? Und… welche Dokumente? Langsamer, bitte…
 
    Agent re-says from the beginner German cell, slower, no pause (illustrative):
-   > Dienstag: 14 bis 16 Uhr. Oder Mittwoch: 8 bis 10 Uhr.
+   > Dienstag, 27. Oktober. 10 Uhr. Speicherstraße 12, Hamburg. Zweiter Stock. Bitte mitbringen: Ausweis.
+   > Arbeitserlaubnis.
 
-   Console: German meter → beginner; chips "ähm", "Langsamer, bitte".
+   Console: German meter → beginner; chips "ähm", "ich verstehe nicht gut", "Langsamer, bitte".
 3. **The switch, with the explicit cue.**
    > Pardon, est-ce qu'on peut continuer en français ? Je suis bien plus à l'aise, vous pouvez parler normalement.
 
-   Agent continues **in French at fluent · formal**: *"Of course. So: Tuesday the 27th between 2 and 4 pm, or
-   Wednesday the 28th between 8 and 10 am."* Console: a French meter appears at fluent next to the German one at
-   beginner.
-4. **Booking.**
-   > Mercredi matin, c'est parfait. Vous pouvez m'envoyer la confirmation par SMS ?
+   Agent continues **in French at fluent · formal**: *"Of course. Tuesday the 27th at 10, Speicherstraße 12 in Hamburg,
+   second floor. Bring your ID and your work permit; if the permit is still being processed, the receipt from the
+   immigration office is enough."* Console: a French meter appears at fluent next to the German one at beginner.
+4. **Confirmation.**
+   > Parfait. Vous pouvez m'envoyer tout ça par SMS, en français ?
 
-   Agent: `book_slot`, `send_confirmation(sms, fra)`: the confirmation text appears on the console in French, formal.
+   Agent: `send_confirmation(sms, fra)`: the text appears on the console in French, formal, with the slot, the address
+   and the documents list.
 
 **Needs before it can be recorded:** the realtime language switch (below), German phrases in the gate ("wie bitte",
 "Entschuldigung", "langsamer", "ich verstehe nicht", "noch einmal"), one estimate per language, a German voice.
@@ -156,10 +183,12 @@ console shows two meters.
 
 ## Press-play (Sunday night)
 
-- The landing page shows three cards; a judge presses play on any of them, no microphone, no sign-in.
-- The caller audio is Alex's own recording of the lines above, split per turn. Its transcripts are **cached**
-  (D-008): no live STT, no network risk on the judge's play. The agent's draft and render run live; if a live call
-  fails, the card falls back to a recorded run of the same scenario.
+- The landing page opens on the tagline, then three cards, each with its impact topic; a judge presses play on any of
+  them, no microphone, no sign-in.
+- The caller audio is Alex's own recording of the lines above, split per turn (the beginner turns by a genuine
+  non-native speaker if D-013 lands). Its transcripts are **cached** (D-008): no live STT, no network risk on the
+  judge's play. The agent's draft and render run live; if a live call fails, the card falls back to a recorded run of
+  the same scenario.
 - Record a full fallback video of scenario 1 and 2 on Sunday afternoon (CHECKLIST).
 
 ## Open risks, in order
@@ -173,4 +202,8 @@ console shows two meters.
    Eleven v4 keeps one voice for French and German. Undecided.
 4. **Negotiation logic (scenario 2).** The floor and the concessions must live in the tool, so a prompt can't talk
    the agent below 1 150 €.
-5. **Numbers in renders (scenario 2).** Prices and dates at beginner level, untested.
+5. **Numbers, dates and addresses in renders (all three).** 142 €, 47,33 €, 1 150 €, "Dienstag, 27. Oktober, 10 Uhr",
+   "Speicherstraße 12" at beginner level in both languages: untested, and a wrong amount or date breaks the
+   essentials story.
+6. **Impact framing read as a veneer.** Mitigation: the setting itself is essential, the pitch opens with the person,
+   and the honesty lines (`IDEA.md` § 0) are on the evaluation slide, not hidden.
