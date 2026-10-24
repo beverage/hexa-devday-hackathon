@@ -103,7 +103,34 @@ cell) and the ~2 s realtime commit, a full turn lands around 5–6 s, in line wi
 counts (the tool leg) at similar draft speed: the default brain unless cost says otherwise. Prompt note from the
 samples: both drafts ask "would you like a plan?" instead of offering the three instalments and the link, and nano
 writes an ISO date; the system prompt must say "offer, don't ask" and "dates in words". The Levelang MCP server on
-Alex's machine could not reach its backend at 11:55, so the render leg is not re-measured today.
+Alex's machine could not reach its backend at 11:55 (it points at localhost), so the render was measured against
+staging directly, below.
+
+### Measured 24 Oct 12:05: the render leg on staging (test 4, second half)
+
+`agent/probe-render.mjs` against `levelang-backend-staging.fly.dev`, the turn-1 draft (38 words), spoken, default
+model (`gemini-3.1-flash-lite` on Vertex), 3 runs each, median.
+
+| Cell | Median | Note |
+|---|---|---|
+| fra beginner/formal | 1.98 s | min 1.84, one outlier 2.90 |
+| fra intermediate/formal | 1.99 s | |
+| fra fluent/formal | 1.89 s | |
+| fra fluent/casual | 1.67 s | *tu* throughout, numbers intact |
+| fra beginner + intermediate + advanced in parallel | 2.15 s | the neighbour pre-render costs nothing extra |
+| deu intermediate/formal | 2.18 s | single run |
+| deu fluent/formal | 2.00 s | single run |
+| **deu beginner/formal** | **9.3 s** | 7.3–10.9 s over five runs, pinned model no help |
+| **ita beginner/formal** | **6.5 s** | single run, control |
+
+Two findings. **French is ~0.4 s slower than on 10-23** (1.9–2.0 s a cell vs 1.35–1.67), so a French turn is draft ≈ 1.7–2.2 s
++ render ≈ 2.0 s + realtime commit ≈ 2 s: **about 6 s**, and the filler phrase is not optional. **The beginner cell in
+German and Italian takes 4–5× longer** than every other cell, same model, same provider; French beginner is fine. That
+is a backend matter for the Levelang backlog (the beginner prompt or a validation pass for those languages), not a
+weekend fix. For scenario 3 it means the German beginner neighbour must start rendering the moment the first German
+draft is done and may still land ~7–9 s later; the "Langsamer, bitte" re-say waits on it or falls back to the
+intermediate cell slowed down. Quality check on the renders: 142 euros and "trois mensualités" survive at every level;
+beginner splits the last sentence in two as designed.
 
 ## 3. Conversational context for Levelang (the product change)
 

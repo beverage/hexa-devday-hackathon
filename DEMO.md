@@ -196,8 +196,11 @@ The agent starts in German.
 1. **Realtime language switch (scenario 3).** D-007 pins `language_code`; pinned to German, the French cue is
    mangled. Options: run realtime unpinned (noisy on one-word turns), or detect the switch from batch (German came
    back at p = 0.999) and reconnect realtime pinned to the new language. Untested; spike it with a synthetic clip.
-2. **Latency.** The draft is unmeasured; the render is ~1.4–1.7 s a cell. If a turn runs past ~5 s, the filler
-   phrase and streamed voice carry it.
+2. **Latency.** Measured 24 Oct (`IDEA.md` § 2): draft 1.7–2.2 s (gpt-5.4-mini / nano), render 1.9–2.0 s a cell on
+   staging, realtime commit ~2 s: **about 6 s a turn**, so the filler phrase and streamed voice are required, not
+   optional. **German beginner renders in 7–11 s** (Italian beginner 6.5 s; every other cell ~2 s): scenario 3's
+   re-say must pre-render the beginner cell from the first German draft or fall back to the intermediate cell slowed
+   down.
 3. **One voice across languages (scenario 3).** Gradium changes voice per language (it would sound like a transfer);
    Eleven v4 keeps one voice for French and German. Undecided.
 4. **Negotiation logic (scenario 2).** The floor and the concessions must live in the tool, so a prompt can't talk

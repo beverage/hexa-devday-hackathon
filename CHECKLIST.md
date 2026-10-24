@@ -39,7 +39,9 @@
 - [x] URL live: https://hexa-devday-hackathon.vercel.app (hello-world with the tagline, Vercel, 11:50); first commit of
       product code: `agent/CONTRACT.md`, `agent/fixtures/scenario-1.json`, `agent/probe-draft.mjs`, `web/index.html`
 - [x] Draft leg timed (`IDEA.md` § 2, measured 24 Oct): nano 1.28 + 0.92 s, mini 0.68 + 0.99 s; mini is the default brain
-- [ ] Detector spike: tests (2) and (4, render half) from `IDEA.md` § 2 — a text-only judge on Levelang outputs at each level
+- [x] Render leg timed on staging (`IDEA.md` § 2, 12:05): fra ~2.0 s a cell, 3 cells in parallel 2.15 s; **deu beginner
+      9 s, ita beginner 6.5 s** (backend follow-up for the Levelang backlog)
+- [ ] Detector spike: test (2) from `IDEA.md` § 2 — a text-only judge on Levelang outputs at each level
       plus hand-written learner turns; a 20-turn timing table for draft + render
 - [ ] Agent loop: OpenAI draft → Levelang render (current cell + neighbours) → judge update → next turn, text in / text out
 - [ ] Console page: transcript, English draft, rendered cells with the chosen one highlighted, level/register meter
