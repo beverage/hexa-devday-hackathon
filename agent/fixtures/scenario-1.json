@@ -1,0 +1,104 @@
+{
+  "id": "lucioles-energie",
+  "title": "Le prélèvement a été rejeté",
+  "language": "fra",
+  "setting": "Lucioles Énergie, a fictional electricity supplier. The October direct debit of 142 € was returned by the bank on 20 Oct; the caller's letter mentions a possible cut-off.",
+  "start_estimate": {
+    "level": {"value": "intermediate", "confidence": 0.5, "floor": null, "ceiling": null},
+    "register": {"value": "formal", "confidence": 0.9},
+    "raise_votes": 0
+  },
+  "account": {"phone": "+33600000000", "plan": "Essentiel", "amount_due_eur": 142.0, "return_code": "mandate_not_recognised", "returned_on": "2026-10-20", "cutoff": "none"},
+  "payment_plan": {"months": 3, "instalment_eur": 47.33, "first_due": "today", "then": "the 5th of November and December"},
+  "turns": [
+    {
+      "n": 1,
+      "beat": "the fumble",
+      "caller": "Allô ? Bonjour… euh… j'ai reçu une lettre, le… le prélèvement, il est… rejected ? Et ça parle de coupure… Je sais pas comment on dit…",
+      "expected": {
+        "gate": "none",
+        "cell": "intermediate/formal",
+        "tool_calls": ["lookup_account"],
+        "draft_intent": "Payment of 142 euros returned by the bank; nobody is cutting the electricity today; offer three monthly payments and a secure link for the first.",
+        "evidence": ["rejected", "coupure", "comment on dit", "euh"],
+        "estimate_after": {"level": "intermediate", "ceiling": "intermediate", "register": "formal"}
+      }
+    },
+    {
+      "n": 2,
+      "beat": "the instant repair",
+      "caller": "Pardon… plus lentement, s'il vous plaît ?",
+      "interrupts_agent": true,
+      "expected": {
+        "gate": "resay",
+        "gate_reason": "plus lentement",
+        "cell": "beginner/formal",
+        "tool_calls": [],
+        "draft_intent": "Same as turn 1, re-said from the pre-rendered beginner cell with no draft and no render",
+        "evidence": ["plus lentement"],
+        "estimate_after": {"level": "beginner", "register": "formal"},
+        "timing_ms": {"draft": 0, "render_first": 0}
+      }
+    },
+    {
+      "n": 3,
+      "beat": "dropping the act",
+      "caller": "Excusez-moi, je reprends. J'aurais souhaité comprendre pourquoi le prélèvement a été rejeté alors que le compte était approvisionné. Vous pouvez me parler normalement.",
+      "expected": {
+        "gate": "explicit",
+        "gate_reason": "vous pouvez me parler normalement",
+        "cell": "fluent/formal",
+        "tool_calls": [],
+        "draft_intent": "Bank returned the debit on the 20th with a mandate-not-recognised code, usually a change of bank or account; the plan stands; the link takes the first instalment by card today; new mandate afterwards.",
+        "evidence": ["j'aurais souhaité", "approvisionné", "vous pouvez me parler normalement"],
+        "estimate_after": {"level": "fluent", "floor": "advanced", "register": "formal"}
+      }
+    },
+    {
+      "n": 4,
+      "beat": "tutoiement",
+      "caller": "Parfait. Et on peut se tutoyer, hein, ce sera plus simple.",
+      "expected": {
+        "gate": "explicit",
+        "gate_reason": "on peut se tutoyer",
+        "cell": "fluent/casual",
+        "tool_calls": ["propose_payment_plan", "send_payment_link"],
+        "draft_intent": "Sure, sending the link now.",
+        "evidence": ["on peut se tutoyer"],
+        "estimate_after": {"level": "fluent", "register": "casual"},
+        "card_after": {"plan": "3 × 47,33 €", "link": "stripe test-mode link + QR"}
+      }
+    },
+    {
+      "n": 5,
+      "beat": "payment",
+      "caller": "C'est fait, j'ai payé.",
+      "external_event": "stripe test payment 47.33 EUR with 4242",
+      "expected": {
+        "gate": "none",
+        "cell": "fluent/casual",
+        "tool_calls": [],
+        "draft_intent": "First instalment received; the next two go through on the 5th of November and December; the electricity stays on.",
+        "evidence": [],
+        "estimate_after": {"level": "fluent", "register": "casual"},
+        "card_after": {"status": "first instalment paid"}
+      }
+    },
+    {
+      "n": 6,
+      "beat": "close",
+      "caller": "Merci, bonne journée.",
+      "expected": {
+        "gate": "none",
+        "cell": "fluent/casual",
+        "tool_calls": [],
+        "draft_intent": "You too, goodbye.",
+        "evidence": [],
+        "estimate_after": {"level": "fluent", "register": "casual"},
+        "note": "under five words: the judge returns can't-tell and changes nothing"
+      }
+    }
+  ],
+  "renders_to_check": ["142 € at beginner", "47,33 € at beginner", "dates: the 5th of November and December at beginner"],
+  "source": "DEMO.md scenario 1, 24 Oct 2026; agent French in DEMO.md is illustrative until re-rendered"
+}

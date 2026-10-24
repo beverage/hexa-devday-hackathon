@@ -87,6 +87,24 @@ Reversing Levelang is not a detector: Levelang's levels are production rules; de
 - Language-design docs for the rubric: `~/Code/Apps/levelang/levelang-docs/languages/fra/design.md` and
   `expectations.md` (and `deu/`). The 19-category quality harness and dual judge live in `levelang-backend`.
 
+### Measured 24 Oct 11:55: the draft leg (IDEA § 2 test 4, first half)
+
+`agent/probe-draft.mjs`, scenario 1 turn 1, chat completions with the three scenario tools, streaming, 3 runs each,
+median. Leg 1 = the model's first response (a `lookup_account` call every run); leg 2 = the English draft after the
+tool result. `reasoning_effort: low` was rejected by both, so default effort.
+
+| Model | Tool-call leg | Draft leg | Draft first token | Tool called |
+|---|---|---|---|---|
+| `gpt-5.4-nano` | 1.28 s | 0.92 s | 0.92 s | 3/3 |
+| `gpt-5.4-mini` | 0.68 s | 0.99 s | 0.73 s | 3/3 |
+
+So the draft path is **about 1.7 s (mini) to 2.2 s (nano) before the render**; with the 10-23 render (1.35–1.67 s a
+cell) and the ~2 s realtime commit, a full turn lands around 5–6 s, in line with `DEMO.md`. Mini is faster where it
+counts (the tool leg) at similar draft speed: the default brain unless cost says otherwise. Prompt note from the
+samples: both drafts ask "would you like a plan?" instead of offering the three instalments and the link, and nano
+writes an ISO date; the system prompt must say "offer, don't ask" and "dates in words". The Levelang MCP server on
+Alex's machine could not reach its backend at 11:55, so the render leg is not re-measured today.
+
 ## 3. Conversational context for Levelang (the product change)
 
 Levelang is great with full context, not fragments; sentence-by-sentence rendering is out. Multi-turn is
