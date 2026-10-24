@@ -132,6 +132,17 @@ draft is done and may still land ~7–9 s later; the "Langsamer, bitte" re-say w
 intermediate cell slowed down. Quality check on the renders: 142 euros and "trois mensualités" survive at every level;
 beginner splits the last sentence in two as designed.
 
+**Follow-up 12:40, same prompts rebuilt and sent to Vertex directly** (`scratchpad/probe-backend-shape.py`,
+`probe-levers.py`, 3 runs): the 9 s German beginner was **transient Vertex-side slowness**, not the prompt or the
+backend; the same request on staging at 12:30 took 1.8 s and the rebuilt request from a laptop 1.4–1.7 s. Where the
+time goes: the backend asks for a **transliteration of every render** (`TRANSLITERATION REQUIRED` for fra, deu, ita),
+which triples the output (230 vs 76 tokens) and is the difference between 1.6 s and 0.8 s a cell in French, 1.4 s and
+1.0 s in German. The agent never shows it. The **Vertex priority header** (`VERTEX_AI_PRIORITY`, unset on staging)
+made no measurable difference in quiet conditions (1.61 vs 1.70 s); it is built for contention like the 12:05
+episode, which is unverified. The AI Studio "422" is a **402: the AI Studio prepaid credits are depleted**; the
+`GEMINI_PRIORITY` switch (`service_tier: priority`) is untestable until topped up. Proposed fix, a backend change: a
+per-request opt-out of transliteration (default unchanged for the apps), which halves the render for the agent.
+
 ## 3. Conversational context for Levelang (the product change)
 
 Levelang is great with full context, not fragments; sentence-by-sentence rendering is out. Multi-turn is
