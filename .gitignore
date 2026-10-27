@@ -2,10 +2,10 @@
 .env.local
 *.env
 node_modules/
-stt-spike/clips/*.m4a
-stt-spike/clips/*.wav
-stt-spike/clips/wav/
-stt-spike/out/
+pre-pivot/stt-spike/clips/*.m4a
+pre-pivot/stt-spike/clips/*.wav
+pre-pivot/stt-spike/clips/wav/
+pre-pivot/stt-spike/out/
 .DS_Store
 team-setup/
 .vercel/
